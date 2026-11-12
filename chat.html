@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PUYO Group">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="Prototype chatbot WhatsApp PUYO Member untuk tugas Strategic Management. Bukan akun resmi PUYO.">
+<link rel="apple-touch-icon" href="img/wa-avatar.png">
+<link rel="icon" type="image/png" href="img/wa-avatar.png">
+<title>PUYO Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDE8E1; --in:#fff; --out:#E1F8CF; --ink:#111B21; --mut:#667781; --blue:#1A73C8; --verified:#2D8CF0;
+  --gold:#F0A93B; --gold-d:#B7791F; --green:#00A884; --inner:#EFEFEF; --line:#E6E9EB; --red:#D9534F;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#cfd3cc;color:var(--ink);overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer}
+input{font:inherit;color:inherit}
+a{color:var(--blue)}
+#app{position:relative;max-width:480px;height:100vh;height:100dvh;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.12)}
+
+/* header */
+header{flex:none;display:flex;align-items:center;gap:6px;background:#fff;padding:calc(8px + env(safe-area-inset-top,0px)) 6px 8px 4px;border-bottom:1px solid var(--line);z-index:5}
+header .back{width:34px;height:40px;display:grid;place-items:center}
+header .av{width:42px;height:42px;border-radius:50%;flex:none;border:1px solid #e3eaea;background:#fff}
+header .who{flex:1;min-width:0;padding-left:6px}
+header .nm{display:flex;align-items:center;gap:5px;font-weight:700;font-size:18px;line-height:1.15}
+header .sub{font-size:13px;color:var(--mut);line-height:1.2;margin-top:1px}
+header .sub.live{color:var(--green)}
+header .dots{width:40px;height:40px;display:grid;place-items:center;border-radius:50%}
+header .dots:active{background:#f0f2f2}
+
+/* messages */
+#msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 6px}
+#msgs::-webkit-scrollbar{display:none}
+.chip{width:max-content;margin:10px auto 8px;background:#DCE8EE;color:#4b5b63;font-size:13px;padding:4px 12px;border-radius:9px}
+.notice{max-width:92%;margin:6px auto 10px;background:#FFF3C9;color:#54451a;font-size:12.5px;line-height:1.4;padding:8px 12px;border-radius:10px;text-align:center}
+.row{display:flex;margin:3px 0}
+.row.me{justify-content:flex-end}
+.col{display:flex;flex-direction:column;align-items:flex-start;max-width:86%}
+.row.me .col{align-items:flex-end}
+.b{position:relative;padding:8px 10px 5px;border-radius:12px;font-size:15.5px;line-height:1.38;box-shadow:0 1px .5px rgba(11,20,26,.12);word-wrap:break-word;overflow-wrap:anywhere}
+.b.in{background:var(--in);border-top-left-radius:3px}
+.b.out{background:var(--out);border-top-right-radius:3px}
+.b .t{display:flex;justify-content:flex-end;align-items:center;gap:3px;font-size:11.5px;color:var(--mut);margin-top:1px}
+.b.out .t svg{width:16px;height:11px}
+.b b{font-weight:700}
+.typing{display:flex;gap:4px;padding:13px 14px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#9aa6ad;animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
+@keyframes bl{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+/* cards */
+.b.card{padding:6px 6px 0;width:min(320px,100%)}
+.inner{background:var(--inner);border-radius:9px;padding:12px}
+.inner .ct{font-weight:700;font-size:16px;margin-bottom:8px}
+.stamps{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.stamps svg{width:34px;height:34px;flex:none}
+.sl{margin-top:8px;font-size:13px;font-weight:600;color:var(--gold-d)}
+.cta{display:block;width:100%;text-align:center;color:var(--blue);font-weight:500;font-size:15.5px;padding:12px 6px;border-top:1px solid var(--line);margin-top:6px}
+.cta:active{background:#f4f7f8}
+.cta.dis{color:var(--mut);pointer-events:none}
+.inner.pv{display:flex;gap:12px;align-items:flex-start}
+.ico{width:56px;height:56px;border-radius:10px;flex:none;display:grid;place-items:center}
+.ico.cream{background:#FCEBC6}.ico.blue{background:#E4ECF7}
+.ico svg{width:40px;height:40px}
+.pv .pt{font-weight:700;font-size:16px;line-height:1.2}
+.pv .pd{font-size:12.5px;line-height:1.35;color:#3d4a50;margin-top:4px}
+.pv .code{font-size:12.5px;font-weight:700;margin-top:3px;letter-spacing:.2px}
+
+/* quick replies */
+.qr{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px;width:min(340px,100%)}
+.qr button{flex:1 1 auto;min-width:calc(50% - 3px);background:#fff;color:var(--blue);font-weight:500;font-size:15.5px;padding:11px 12px;border-radius:9px;box-shadow:0 1px .5px rgba(11,20,26,.12);text-align:center}
+.qr button:active{background:#f1f5f7}
+
+.hint{margin:14px auto;max-width:330px;background:#fff;border-radius:14px;padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.hint b{display:block;font-size:16px;margin-bottom:6px}
+.hint p{margin:0 0 12px;font-size:14px;color:#44535a;line-height:1.45}
+.primary{background:var(--green);color:#fff;font-weight:600;font-size:15.5px;padding:12px 18px;border-radius:24px;width:100%}
+.primary:active{filter:brightness(.94)}
+.ghost{color:var(--blue);font-weight:500;padding:10px;font-size:14.5px}
+
+/* composer */
+footer{flex:none;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:flex-end;background:transparent}
+.field{flex:1;display:flex;align-items:center;gap:6px;background:#fff;border-radius:26px;padding:0 14px;min-height:46px;box-shadow:0 1px 1px rgba(0,0,0,.06)}
+.field input{flex:1;border:0;outline:0;background:none;font-size:16px;padding:12px 0;min-width:0}
+.field svg{width:24px;height:24px;color:#7b8a92;flex:none}
+#send{width:46px;height:46px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;flex:none}
+#send svg{width:22px;height:22px}
+
+/* menu + sheet */
+#menu{position:absolute;right:8px;top:calc(54px + env(safe-area-inset-top,0px));background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.22);min-width:250px;padding:6px 0;z-index:30}
+#menu button{display:block;width:100%;text-align:left;padding:13px 18px;font-size:15.5px}
+#menu button:active{background:#f1f4f4}
+#menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+#scrim{position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:20}
+#sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;overflow-y:auto;background:#fff;border-radius:20px 20px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom,0px));z-index:21;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+#sheet .grab{width:40px;height:4px;border-radius:2px;background:#d4d9dc;margin:0 auto 12px}
+#sheet h3{margin:0 0 4px;font-size:19px}
+#sheet h4{margin:18px 0 8px;font-size:15px}
+#sheet .sub{font-size:13.5px;color:var(--mut);line-height:1.45;margin:0 0 12px}
+#sheet label{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.4px}
+#sheet input{width:100%;border:1.5px solid #d7dde0;border-radius:10px;padding:11px 12px;font-size:16px;outline:0}
+#sheet input:focus{border-color:var(--green)}
+#sheet input:disabled{background:#f3f5f6;color:#5b6a71}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;padding:10px 12px;border-radius:10px;border:1.5px solid #d7dde0;font-size:14px;font-weight:500;text-align:center;line-height:1.25}
+.seg button.on{border-color:var(--green);background:#E7F7F2;color:#046a54;font-weight:600}
+.vrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.vrow:first-of-type{border-top:0}
+.vrow .vt{flex:1;min-width:0}.vrow b{display:block;font-size:14px}.vrow small{color:var(--mut);font-size:12.5px}
+.vrow button{background:#E7F7F2;color:#046a54;font-weight:600;font-size:13.5px;padding:8px 12px;border-radius:18px}
+.hist{font-size:13.5px;color:#3a484f;line-height:1.5}
+.hist div{display:flex;justify-content:space-between;gap:10px;border-top:1px dashed var(--line);padding:6px 0}
+ul.rules{margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.55;color:#33424a}
+#toast{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(10px);background:rgba(17,27,33,.92);color:#fff;font-size:14px;line-height:1.35;padding:10px 16px;border-radius:12px;max-width:88%;text-align:center;opacity:0;pointer-events:none;transition:.22s;z-index:50}
+#toast.on{opacity:1;transform:translateX(-50%)}
+#codeov{position:absolute;inset:0;background:#fff;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+#codeov h2{margin:14px 0 4px;font-size:22px}
+#codeov .cd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:26px;font-weight:700;letter-spacing:1px;margin:16px 0 8px;background:#FFF6DE;border:2px dashed var(--gold);padding:12px 18px;border-radius:12px}
+#codeov p{margin:4px 0;color:#4b5a61;font-size:14px;max-width:300px;line-height:1.45}
+#codeov svg.bar{width:260px;height:70px;margin-top:8px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="back" id="back" aria-label="Kembali"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111B21" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <img class="av" src="img/wa-avatar.png" alt="PUYO Group">
+    <div class="who">
+      <div class="nm">PUYO Group <svg width="19" height="19" viewBox="0 0 24 24"><path fill="#2D8CF0" d="M12 1.6l2.6 1.9 3.2-.1 1 3 2.6 1.9-1 3.1 1 3.1-2.6 1.9-1 3-3.2-.1-2.6 1.9-2.6-1.9-3.2.1-1-3-2.6-1.9 1-3.1-1-3.1 2.6-1.9 1-3 3.2.1z"/><path d="M8 12.3l2.7 2.7 5.3-5.6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="sub" id="sub">Akun bisnis</div>
+    </div>
+    <button class="dots" id="dots" aria-label="Menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="#111B21"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
+  </header>
+
+  <main id="msgs" aria-live="polite"></main>
+
+  <footer>
+    <form class="field" id="f" autocomplete="off" style="padding:0 6px 0 14px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 14.2c.9 1.3 2.1 2 3.5 2s2.6-.7 3.5-2"/><circle cx="9" cy="9.8" r=".6" fill="currentColor"/><circle cx="15" cy="9.8" r=".6" fill="currentColor"/></svg>
+      <input id="inp" type="text" placeholder="Ketik pesan" enterkeyhint="send" autocapitalize="sentences" aria-label="Ketik pesan">
+    </form>
+    <button id="send" aria-label="Kirim">
+      <svg id="ic-mic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 0 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.75 7.46V22h1.5v-2.54A7.5 7.5 0 0 0 19.5 12z"/></svg>
+      <svg id="ic-send" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.99.99 0 0 0-1.38.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.02 4.61c0 .71.73 1.2 1.38.91z"/></svg>
+    </button>
+  </footer>
+
+  <div id="menu" hidden>
+    <button data-m="kasir">Simulasi Kasir (beli di gerai)</button>
+    <button data-m="bday">Simulasi: hari ini ulang tahunku</button>
+    <button data-m="promo">Simulasi: kirim promo musiman</button>
+    <hr>
+    <button data-m="about">Tentang prototype ini</button>
+    <button data-m="reset" style="color:#c0392b">Reset demo</button>
+  </div>
+  <div id="scrim" hidden></div>
+  <div id="sheet" hidden></div>
+  <div id="codeov" hidden></div>
+  <div id="toast"></div>
+</div>
+
+<script src="outlets.js"></script>
+<script>
+(function(){
+'use strict';
+/* ============ helpers ============ */
+const KEY='puyoWA_v1', FREE_AT=5;
+const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const DAYS=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\n/g,'<br>');
+const pad=n=>String(n).padStart(2,'0');
+const hhmm=ts=>{const d=new Date(ts);return pad(d.getHours())+':'+pad(d.getMinutes())};
+const dkey=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()};
+const dlong=ts=>{const d=new Date(ts);return d.getDate()+' '+MONTHS[d.getMonth()]};
+function dayLabel(ts){
+  const t=new Date(), d=new Date(ts), diff=Math.round((new Date(t.getFullYear(),t.getMonth(),t.getDate())-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/864e5);
+  if(diff===0)return'Hari ini'; if(diff===1)return'Kemarin'; if(diff<7)return DAYS[d.getDay()];
+  return d.getDate()+' '+MONTHS[d.getMonth()]+(d.getFullYear()!==t.getFullYear()?' '+d.getFullYear():'');
+}
+const title=s=>s.toLowerCase().replace(/(^|[\s-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const rand4=()=>String(Math.floor(1000+Math.random()*9000));
+const rp=n=>'Rp'+n.toLocaleString('id-ID');
+
+/* ============ state ============ */
+const blank=()=>({stage:'new',phone:'',name:'',gender:'',bday:null,stamps:0,purchases:[],vouchers:[],promoLog:[],bdayYear:0,pending:null,log:[],seq:0});
+let S;
+try{S=Object.assign(blank(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=blank()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const first=()=>S.name?S.name.split(' ')[0]:'';
+const isMember=()=>S.stage==='member';
+
+/* ============ icons ============ */
+const TICKS='<svg viewBox="0 0 16 11" fill="none" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6l3 3 6-7.5M6 8.5l.7.7L13 1.5"/></svg>';
+const stampSvg=on=>on
+  ?'<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#F2AE40"/><path d="M10.5 18.5l5 5 10-11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  :'<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="#F2AE40" stroke-width="2" stroke-dasharray="4.5 3.5"/></svg>';
+const stampRow=n=>Array.from({length:FREE_AT},(_,i)=>stampSvg(i<n)).join('');
+const CUP_V='<svg viewBox="0 0 48 48"><path d="M10 20h28l-3 20a3 3 0 0 1-3 2H16a3 3 0 0 1-3-2z" fill="#fff" stroke="#8A6D3B" stroke-width="2" stroke-linejoin="round"/><path d="M10 20c0-7 6-12 14-12s14 5 14 12z" fill="#E8B44C" stroke="#8A6D3B" stroke-width="2" stroke-linejoin="round"/><rect x="19" y="28" width="10" height="3.5" rx="1.7" fill="#D9534F"/></svg>';
+const CUP_P='<svg viewBox="0 0 48 48"><path d="M10 20h28l-3 20a3 3 0 0 1-3 2H16a3 3 0 0 1-3-2z" fill="#fff" stroke="#3E5C86" stroke-width="2" stroke-linejoin="round"/><path d="M10 20c0-7 6-12 14-12s14 5 14 12z" fill="#5A3B2E" stroke="#3E5C86" stroke-width="2" stroke-linejoin="round"/><text x="24" y="35" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="#3E5C86">15g</text></svg>';
+
+/* ============ vouchers ============ */
+function endOfMonth(){const d=new Date();return new Date(d.getFullYear(),d.getMonth()+1,0,23,59,59).getTime()}
+function mkVoucher(type){
+  const v=type==='bday'
+    ?{type,code:'PUYO-BDAY-'+rand4(),title:'Voucher Ulang Tahun',exp:endOfMonth(),used:false,desc:t=>`1 Silky Desserts gratis, berlaku di semua gerai PUYO hingga ${dlong(t)}.`}
+    :{type,code:'PUYO-FREE-'+rand4(),title:'1 PUYO Gratis (5 stamp)',exp:Date.now()+30*864e5,used:false,desc:t=>`1 Silky Desserts gratis hasil 5 stamp, berlaku di gerai PUYO hingga ${dlong(t)}.`};
+  const stored={type:v.type,code:v.code,title:v.title,exp:v.exp,used:false};
+  S.vouchers.push(stored); save(); return stored;
+}
+const vDesc=v=>v.type==='bday'?`1 Silky Desserts gratis, berlaku di semua gerai PUYO hingga ${dlong(v.exp)}.`:`1 Silky Desserts gratis hasil 5 stamp, berlaku di gerai PUYO hingga ${dlong(v.exp)}.`;
+const vState=v=>v.used?'used':(v.exp<Date.now()?'exp':'active');
+const activeVouchers=()=>S.vouchers.filter(v=>vState(v)==='active');
+
+/* ============ rendering ============ */
+let typingOn=false;
+function bubble(m,isLast){
+  const t=hhmm(m.ts);
+  if(m.who==='me')return`<div class="row me"><div class="col"><div class="b out">${fmt(m.text)}<span class="t">${t}${TICKS}</span></div></div></div>`;
+  let body='';
+  if(m.kind==='stamp'){
+    body=`<div class="b in card"><div class="inner">${m.title?`<div class="ct">${m.title}</div>`:''}<div class="stamps">${stampRow(m.n)}</div><div class="sl">${m.n}/${FREE_AT} stamp${m.n>=FREE_AT?' · lengkap!':m.title?` · ${FREE_AT-m.n} lagi untuk 1 PUYO gratis`:''}</div></div><button class="cta" data-act="card">Lihat Kartu Stamp</button></div>`;
+  }else if(m.kind==='voucher'){
+    const v=S.vouchers.find(x=>x.code===m.code)||{title:'Voucher',code:m.code,exp:Date.now(),type:'free'};
+    const st=vState(v);
+    body=`<div class="b in card"><div class="inner pv"><div class="ico cream">${CUP_V}</div><div><div class="pt">${esc(v.title)}</div><div class="pd">${esc(vDesc(v))}</div><div class="code">Kode: ${esc(v.code)}</div></div></div>${st==='active'?`<button class="cta" data-act="code" data-v="${esc(v.code)}">Tunjukkan Kode</button>`:`<button class="cta dis">${st==='used'?'Sudah dipakai':'Kedaluwarsa'}</button>`}</div>`;
+  }else if(m.kind==='product'){
+    body=`<div class="b in card"><div class="inner pv"><div class="ico blue">${CUP_P}</div><div><div class="pt">PUYOTEIN</div><div class="pd">Protein pudding, ±15 g protein per cup. Varian BULK dan CUT, Rp28.000.</div></div></div><button class="cta" data-act="pilot">Lihat Gerai Pilot</button></div>`;
+  }else{
+    body=`<div class="b in">${fmt(m.text)}<span class="t">${t}</span></div>`;
+  }
+  let qr='';
+  if(isLast&&m.qr&&m.qr.length)qr=`<div class="qr">${m.qr.map(q=>`<button data-qr="${esc(q)}">${esc(q)}</button>`).join('')}</div>`;
+  return`<div class="row"><div class="col">${body}${qr}</div></div>`;
+}
+function render(){
+  const box=$('#msgs');
+  let h='<div class="notice">Prototype tugas Strategic Management · Kelompok 1 Branding 7C. Bukan akun resmi PUYO. Data hanya tersimpan di HP kamu.</div>';
+  let last='';
+  S.log.forEach((m,i)=>{const k=dkey(m.ts);if(k!==last){h+=`<div class="chip">${dayLabel(m.ts)}</div>`;last=k}h+=bubble(m,i===S.log.length-1&&!typingOn)});
+  if(!S.log.length)h+=`<div class="hint"><b>Mulai demo chatbot PUYO Member</b><p>Kamu bisa langsung tanya soal produk, atau mulai dari kasir: beli di gerai PUYO lalu bot kirim pesan pendaftaran member ke WhatsApp-mu.</p><button class="primary" data-act="kasir">Simulasi: beli di gerai PUYO</button></div>`;
+  if(typingOn)h+='<div class="row"><div class="col"><div class="b in typing"><i></i><i></i><i></i></div></div></div>';
+  box.innerHTML=h;
+  box.scrollTop=box.scrollHeight;
+}
+function setTyping(on){typingOn=on;const s=$('#sub');s.textContent=on?'mengetik…':'Akun bisnis';s.classList.toggle('live',on);render()}
+
+/* ============ messaging core ============ */
+let Q=Promise.resolve();
+function pushMsg(m){m.id=++S.seq;m.ts=Date.now();S.log.push(m);save();render()}
+function say(...msgs){
+  Q=Q.then(async()=>{
+    for(const m of msgs){
+      const len=(m.text||'').length;
+      setTyping(true);await sleep(m.delay??Math.min(1500,500+len*9));setTyping(false);
+      pushMsg(Object.assign({who:'bot'},m));
+    }
+  });
+}
+function userSend(text){
+  text=text.trim();if(!text)return;
+  pushMsg({who:'me',kind:'text',text});
+  Q=Q.then(()=>sleep(450)).then(()=>handle(text));
+}
+
+/* ============ registration flow ============ */
+const MONTH_MAP={jan:1,januari:1,feb:2,februari:2,mar:3,maret:3,apr:4,april:4,mei:5,jun:6,juni:6,jul:7,juli:7,agu:8,agt:8,agustus:8,sep:9,sept:9,september:9,okt:10,oktober:10,nov:11,november:11,des:12,desember:12};
+function parseData(text){
+  const parts=text.split('/').map(s=>s.trim());
+  if(parts.length<3)return null;
+  const name=parts[0], g=parts[1].toLowerCase().replace(/[^a-z-]/g,''), ds=parts.slice(2).join('/').toLowerCase().trim();
+  if(!/^[\p{L}][\p{L}\s.'-]{1,39}$/u.test(name))return null;
+  let gender=null;
+  if(/^(l|lk|laki|lakilaki|laki-laki|pria|cowok|cowo|male|m)$/.test(g))gender='Laki-laki';
+  else if(/^(p|pr|perempuan|wanita|cewek|cewe|female|f)$/.test(g))gender='Perempuan';
+  if(!gender)return null;
+  let d,m,y,r;
+  if((r=ds.match(/^(\d{1,2})\s+([a-z]+)\.?\s+(\d{4})$/))){d=+r[1];m=MONTH_MAP[r[2]];y=+r[3]}
+  else if((r=ds.match(/^(\d{1,2})[\/\-.\s](\d{1,2})[\/\-.\s](\d{4})$/))){d=+r[1];m=+r[2];y=+r[3]}
+  if(!d||!m||!y)return null;
+  const dt=new Date(y,m-1,d);
+  if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return null;
+  if(y<1930||y>new Date().getFullYear()-5)return null;
+  return{name:title(name),gender,bday:{d,m,y}};
+}
+const CONSENT_Q=['Setuju','Tidak'];
+function startConsent(withHello){
+  S.stage='await_consent';save();
+  const msgs=[];
+  if(withHello)msgs.push({kind:'text',text:'Halo! Terima kasih sudah belanja di PUYO. Nomor ini baru saja didaftarkan oleh kasir kami untuk **PUYO Member**, gratis!'});
+  else msgs.push({kind:'text',text:'Halo lagi! Mau gabung **PUYO Member**, gratis?'});
+  msgs.push({kind:'text',text:'Sebelum lanjut, boleh kami simpan nama, jenis kelamin, dan tanggal lahirmu? Data hanya dipakai untuk benefit member. Balas **STOP** kapan saja untuk berhenti.',qr:CONSENT_Q});
+  say(...msgs);
+}
+function finishRegistration(d){
+  S.name=d.name;S.gender=d.gender;S.bday=d.bday;S.stage='member';
+  let n=0;
+  if(S.pending){S.stamps=1;n=1;S.purchases.push({ts:S.pending.ts,product:S.pending.product,stamp:true});S.pending=null}
+  save();
+  say({kind:'text',text:`Selamat, ${first()}! Kamu resmi jadi PUYO Member. ${n?'Pembelian hari ini sudah tercatat sebagai stamp pertamamu:':'Stamp pertamamu akan tercatat di pembelian berikutnya di gerai PUYO:'}`},
+      {kind:'stamp',n,title:'Kartu Stamp PUYO Member',delay:600});
+  setTimeout(checkBirthday,4000);
+}
+function addStamp(product){
+  S.purchases.push({ts:Date.now(),product,stamp:true});
+  S.stamps++;
+  if(S.stamps>=FREE_AT){
+    S.stamps=0;const v=mkVoucher('free');
+    say({kind:'text',text:`Selamat, ${first()}! Stamp kamu sudah lengkap 5/5. 1 PUYO gratis sudah jadi milikmu. Tunjukkan kode di bawah ke kasir, ya.`},
+        {kind:'stamp',n:FREE_AT,delay:500},{kind:'voucher',code:v.code,delay:500});
+  }else{
+    const left=FREE_AT-S.stamps;
+    say({kind:'text',text:`Stamp kamu bertambah, ${first()}! Tinggal ${left} lagi untuk 1 PUYO gratis.`},{kind:'stamp',n:S.stamps,delay:500});
+  }
+  save();
+}
+
+/* ============ birthday + promo ============ */
+function sendBirthday(){
+  const v=mkVoucher('bday');S.bdayYear=new Date().getFullYear();save();
+  say({kind:'text',text:`Selamat ulang tahun, ${first()}! 🎂 Ada 1 PUYO gratis untukmu bulan ini. Tunjukkan kode di bawah ke kasir, ya.`,delay:700},{kind:'voucher',code:v.code,delay:600});
+}
+function checkBirthday(){
+  if(!isMember()||!S.bday)return;
+  const t=new Date();
+  if(S.bday.d===t.getDate()&&S.bday.m===t.getMonth()+1&&S.bdayYear!==t.getFullYear())sendBirthday();
+}
+function monthKey(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)}
+const promoCount=()=>S.promoLog.filter(k=>k===monthKey()).length;
+function sendPromo(){
+  if(!isMember()){toast('Daftar member dulu lewat Simulasi Kasir.');return}
+  if(promoCount()>=2){toast('Batas 2 pesan promo per bulan sudah tercapai (ketentuan program). Pesan ditahan.');return}
+  S.promoLog.push(monthKey());save();
+  const n=promoCount();
+  say({kind:'text',text:`Halo ${first()}! 🌙 Menjelang hari raya, khusus PUYO Member: diskon 20% untuk Silky Desserts di gerai PUYO selama periode promo. Tunjukkan chat ini ke kasir.\n\n(Contoh pesan promo musiman. Batas ${n}/2 pesan promo bulan ini; diskon maks 20%.)`,qr:['Info PUYOTEIN','Kartu Stamp']});
+}
+
+/* ============ knowledge ============ */
+const CITIES=[...new Set((window.OUTLETS||[]).map(o=>o[2]))];
+const STOP_WORDS=new Set(['gerai','outlet','puyo','di','dekat','ada','mana','cabang','lokasi','yang','dimana','apa','cari','daerah','area','sekitar','kota','alamat','toko','kamu','ke','dong','ya','nih','aja','kak','saya','aku','mau','tau','tahu','bisa','buka','list','daftar','nya','untuk','dan','atau','gerainya','ga','gak','tidak','sih']);
+function findOutlets(t){
+  const toks=t.split(' ').filter(w=>w.length>1&&!STOP_WORDS.has(w));
+  const all=window.OUTLETS||[];
+  if(!toks.length)return{toks,res:[]};
+  let best=0;const sc=all.map(o=>{const hay=(o[0]+' '+o[1]+' '+o[2]).toLowerCase();let s=0;toks.forEach(w=>{if(hay.includes(w))s++});best=Math.max(best,s);return s});
+  const res=best?all.filter((o,i)=>sc[i]===best):[];
+  return{toks,res};
+}
+function outletReply(t){
+  const {toks,res}=findOutlets(t);
+  if(!toks.length)return[{kind:'text',text:'Kamu mau cari gerai PUYO di kota atau mal mana? Tulis nama kota/mal-nya, atau pilih di bawah.',qr:['Gerai Jakarta Selatan','Gerai Tangerang','Gerai Bandung','Gerai Surabaya','Gerai Bali']}];
+  if(!res.length)return[{kind:'text',text:`Aku belum menemukan gerai untuk “${toks.join(' ')}” di data prototype ini (${(window.OUTLETS||[]).length} gerai dari website PUYO). Coba tulis nama kota atau mal lain, ya.`,qr:['Gerai Jakarta Selatan','Gerai Tangerang','Gerai Bandung']}];
+  const show=res.slice(0,5).map(o=>`• **${title(o[0])}** (${o[1]}, ${o[2]})\n[Buka peta](${o[3].trim()})`).join('\n');
+  const more=res.length>5?`\n\n…dan ${res.length-5} gerai lain. Persempit dengan nama mal atau kota, ya.`:'';
+  return[{kind:'text',text:`Ketemu ${res.length} gerai PUYO:\n${show}${more}\n\nData gerai dari website PUYO, cek ulang sebelum berkunjung.`}];
+}
+const MENU_QR=['Kartu Stamp','Menu Silky','Info PUYOTEIN','Cari Gerai'];
+const PUYOTEIN_GENERAL=`**PUYOTEIN** adalah protein pudding dari PUYO: ±15 g protein per cup 120 g, Rp28.000 untuk semua varian.\n\n• **BULK** (±250 kkal, 18 g gula): Chocolate, Peanut Butter, Banana. Buat tambah energi & protein.\n• **CUT** (±135 kkal, 6 g gula): Strawberry, Matcha, Vanilla (reduced sugar). Buat batasi kalori tapi tetap dapat protein.\n\nSaat ini masih tahap pilot di gerai terpilih. Angka gizi masih target formulasi, belum final sampai lolos uji laboratorium.`;
+function answer(raw,t){
+  const has=re=>re.test(t);
+  if(has(/\bpuyotein\b|protein|\bbulk\b|\bcut\b|whey/)){
+    const bdayV=activeVouchers().find(v=>v.type==='bday');
+    if(bdayV&&has(/voucher|ulang tahun|ultah|gratis|coba|berlaku/))
+      return[{kind:'text',text:'Bisa! Voucher ulang tahun juga berlaku untuk PUYOTEIN di gerai pilot. Ini detailnya:'},{kind:'product',delay:600}];
+    if(has(/\bbulk\b/))return[{kind:'text',text:'**PUYOTEIN BULK**: 120 g, ±250 kkal, ±15 g protein, ±30 g karbohidrat, ±8 g lemak, 18 g gula. Rasa Chocolate, Peanut Butter, Banana. Cocok setelah latihan kalau kamu mau nambah energi dan protein. Rp28.000.'},{kind:'product',delay:500}];
+    if(has(/\bcut\b|diet|kalori/))return[{kind:'text',text:'**PUYOTEIN CUT**: 120 g, ±135 kkal, ±15 g protein, ±12 g karbohidrat, ±3 g lemak, 6 g gula. Rasa Strawberry, Matcha, Vanilla (reduced sugar). Cocok buat teman fase diet. Rp28.000.'},{kind:'product',delay:500}];
+    if(has(/pilot|gerai|dimana|beli|tersedia/))return pilotReply();
+    if(has(/harga|berapa/))return[{kind:'text',text:'PUYOTEIN Rp28.000 per cup (120 g), sama untuk semua varian BULK dan CUT. Lebih tinggi dari Silky Desserts (Rp15.000) karena positioningnya dessert tinggi protein, bukan puding biasa.'}];
+    return[{kind:'text',text:PUYOTEIN_GENERAL},{kind:'product',delay:500,qr:['PUYOTEIN BULK','PUYOTEIN CUT','Kartu Stamp']}];
+  }
+  if(has(/pilot/))return pilotReply();
+  if(has(/gofood|grab|shopee|pesan antar|delivery|ojol/))
+    return[{kind:'text',text:'PUYO bisa dipesan lewat GoFood, GrabFood, dan ShopeeFood. Tapi **stamp hanya diberikan untuk pembelian langsung di gerai PUYO**, tidak untuk pesanan lewat aplikasi pesan antar. Harga di aplikasi juga bisa berbeda dari harga gerai.'}];
+  if(has(/stamp|kartu|poin|point|berapa lagi/)){
+    if(!isMember())return notMember();
+    return[{kind:'text',text:`Ini kartu stamp kamu, ${first()}:`},{kind:'stamp',n:S.stamps,title:'Kartu Stamp PUYO Member',delay:500}];
+  }
+  if(has(/voucher|kode|klaim|reward|hadiah/)){
+    if(!isMember())return notMember();
+    const a=activeVouchers();
+    if(!a.length)return[{kind:'text',text:`Kamu belum punya voucher aktif. Kumpulkan ${FREE_AT} stamp dari pembelian di gerai PUYO untuk 1 PUYO gratis, dan nikmati voucher ulang tahun di bulan ulang tahunmu.`,qr:['Kartu Stamp']}];
+    return[{kind:'text',text:`Kamu punya ${a.length} voucher aktif:`},...a.map(v=>({kind:'voucher',code:v.code,delay:450}))];
+  }
+  if(has(/ulang tahun|ultah|birthday|bday/))
+    return[{kind:'text',text:'Di bulan ulang tahunmu, PUYO Member dapat 1 PUYO gratis dalam bentuk kode voucher. Kami kirim otomatis lewat chat ini di hari ulang tahunmu, tinggal tunjukkan kodenya ke kasir. Berlaku di semua gerai PUYO sampai akhir bulan.'+(isMember()?'':'\n\nKamu belum terdaftar. Minta kasir mendaftarkan nomor HP-mu saat belanja, gratis.')}];
+  if(has(/gerai|outlet|cabang|lokasi|dekat|alamat|toko|\bmal\b|\bmall\b/)||CITIES.some(c=>c.toLowerCase().split(' ').some(w=>w.length>3&&new RegExp('\\b'+w+'\\b').test(t))))
+    return outletReply(t);
+  if(has(/silky drink|minuman|\bdrink/))return[{kind:'text',text:'**Silky Drinks** dijual mulai dari Rp25.000. Untuk daftar rasa terbaru dan harga per varian, cek langsung di gerai ya, karena menu bisa berubah.'}];
+  if(has(/halal/))return[{kind:'text',text:'Produk PUYO sudah bersertifikat halal.'}];
+  if(has(/kalori|kkal|diet|sehat|gula|diabetes|lemak|pengawet/))
+    return[{kind:'text',text:'Silky Desserts punya sekitar **120 kalori per cup**, bebas lemak trans, dan tanpa pengawet tambahan. Tetap saja dia dessert manis, jadi kalau kamu lagi jaga gula, **PUYOTEIN CUT** (±135 kkal, 6 g gula, ±15 g protein) lebih cocok. Kalau ada kondisi medis seperti diabetes, sebaiknya tanya dokter dulu.',qr:['PUYOTEIN CUT','Menu Silky']}];
+  if(has(/rasa|varian|menu|silky|puding|pudding|dessert|harga|berapa|klepon|price/))
+    return[{kind:'text',text:'**Silky Desserts** Rp15.000 per cup, tersedia lebih dari 13 varian rasa. Contohnya: Milk, Chocolate, Mango, Cookies & Cream, Strawberry, Matcha, Taro, Lychee, Bubblegum, Classic Vanilla, Peach, plus seri rasa baru yang rutin keluar (misalnya Silky Klepon). Sekitar 120 kalori per cup, bebas lemak trans, tanpa pengawet tambahan, halal.',qr:['Silky Drinks','Info PUYOTEIN','Cari Gerai']}];
+  if(has(/promo|diskon|potongan|ramadan|lebaran|hari raya/))
+    return[{kind:'text',text:'Promo untuk PUYO Member dikirim lewat chat ini, terutama menjelang Ramadan, Lebaran, dan hari raya lainnya. Kami batasi **maksimal 2 pesan promo per bulan** dan diskon **maksimal 20%**, jadi kamu tidak kebanjiran pesan.'}];
+  if(has(/data|privasi|pribadi|pdp|aman|keamanan/))
+    return[{kind:'text',text:'Datamu (nama, jenis kelamin, tanggal lahir) hanya dipakai untuk benefit member seperti stamp dan voucher ulang tahun, dan hanya disimpan setelah kamu setuju, sesuai UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi. Balas **STOP** untuk berhenti kapan saja, atau **HAPUS DATA** untuk menghapus datamu.'}];
+  if(has(/jam|buka|tutup|operasional/))return[{kind:'text',text:'Jam operasional tiap gerai bisa berbeda, mengikuti lokasinya. Aku belum punya datanya di sini, jadi cek lewat peta gerai atau tanya langsung ke kasir ya.',qr:['Cari Gerai']}];
+  if(has(/terima kasih|makasih|thanks|thank you|thx|tengkyu/))return[{kind:'text',text:'Sama-sama! Kalau ada yang mau ditanyakan lagi, tinggal chat ya. 😊'}];
+  if(has(/^(halo|hai|hi|hello|hey|pagi|siang|sore|malam|p|permisi|assalamualaikum)\b/))
+    return[{kind:'text',text:`Halo${isMember()?' '+first():''}! Aku asisten PUYO Group. Mau lihat kartu stamp, tanya produk, atau cari gerai?`,qr:MENU_QR}];
+  return[{kind:'text',text:'Maaf, aku belum paham maksudmu. Aku bisa bantu soal kartu stamp & voucher, menu Silky Desserts, PUYOTEIN, gerai terdekat, dan program member. Coba pilih salah satu di bawah, ya.',qr:MENU_QR}];
+}
+function notMember(){
+  return[{kind:'text',text:'Kamu belum terdaftar sebagai PUYO Member. Daftarnya gratis dan bisa berapa pun jumlah belanjanya: sebutkan nomor HP-mu ke kasir saat membayar di gerai PUYO, nanti kami kirim pesan pendaftaran ke WhatsApp ini.'+(S.stage==='declined'||S.stage==='stopped'?'\n\nKalau mau gabung lagi, balas **MEMBER**.':'')}];
+}
+function pilotReply(){
+  return[{kind:'text',text:'PUYOTEIN diuji dulu di sekitar 5 gerai pilot (dengan sampling, workout bundle, dan kolaborasi gym). Daftar gerai pilot akan kami umumkan lewat chat ini ke PUYO Member. Sementara itu, mau cari gerai PUYO terdekat?',qr:['Cari Gerai']}];
+}
+
+/* ============ main handler ============ */
+function doStop(){
+  S.stage='stopped';save();
+  say({kind:'text',text:'Kamu sudah berhenti dari pesan PUYO Member. Kami tidak akan mengirim pesan promo lagi. Kalau berubah pikiran, balas **MEMBER**. Untuk menghapus datamu, balas **HAPUS DATA**.'});
+}
+function doDelete(){
+  Object.assign(S,{stage:'new',phone:'',name:'',gender:'',bday:null,stamps:0,purchases:[],vouchers:[],promoLog:[],bdayYear:0,pending:null});save();
+  say({kind:'text',text:'Datamu (nama, jenis kelamin, tanggal lahir, stamp, dan voucher) sudah dihapus dari sistem kami. Terima kasih sudah mencoba PUYO Member.'});
+}
+function handle(raw){
+  const t=raw.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim();
+  if(/^stop$|^berhenti$|unsubscribe|jangan kirim/.test(t))return doStop();
+  if(/hapus data|hapus akun/.test(t))return doDelete();
+  if(/^member$|^daftar$|^daftar member$|mau jadi member|^gabung$/.test(t)){
+    if(isMember())return say({kind:'text',text:`Kamu sudah jadi PUYO Member, ${first()}! 🎉`,qr:['Kartu Stamp']});
+    if(S.phone)return startConsent(false);
+    return say(...notMember());
+  }
+  if(S.stage==='await_consent'){
+    if(/^(setuju|ya|iya|oke|ok|boleh|y|yes|siap)$/.test(t)){
+      S.stage='await_data';save();
+      return say({kind:'text',text:'Silakan kirim datamu dengan format:\nNama / Jenis kelamin / Tanggal lahir'});
+    }
+    if(/^(tidak|nggak|enggak|gak|ga|no|tdk|nope|jangan)$/.test(t)){
+      S.stage='declined';S.pending=null;save();
+      return say({kind:'text',text:'Baik, datamu tidak kami simpan dan nomor ini tidak didaftarkan. Kalau berubah pikiran, balas **MEMBER** kapan saja.'});
+    }
+    return say({kind:'text',text:'Mau gabung PUYO Member dan mengizinkan kami menyimpan nama, jenis kelamin, dan tanggal lahirmu?',qr:CONSENT_Q});
+  }
+  if(S.stage==='await_data'){
+    const d=parseData(raw);
+    if(d)return finishRegistration(d);
+    return say({kind:'text',text:'Hmm, formatnya belum pas. Coba kirim seperti ini:\nRaka / Laki-laki / 14 Maret 2001\n\n(Nama / Jenis kelamin / Tanggal lahir, dipisah tanda “/”.)'});
+  }
+  say(...answer(raw,t));
+}
+
+/* ============ UI: toast / sheet / menu ============ */
+let toastT;
+function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),3200)}
+function openSheet(html){$('#sheet').innerHTML='<div class="grab"></div>'+html;$('#sheet').hidden=false;$('#scrim').hidden=false;$('#menu').hidden=true;$('#sheet').scrollTop=0}
+function closeSheet(){$('#sheet').hidden=true;$('#scrim').hidden=true;$('#menu').hidden=true}
+
+const PRODUCTS=[['Silky Dessert · Rp15.000','Silky Desserts'],['PUYOTEIN BULK · Rp28.000','PUYOTEIN BULK'],['PUYOTEIN CUT · Rp28.000','PUYOTEIN CUT']];
+function kasirSheet(){
+  const act=activeVouchers();
+  openSheet(`
+   <h3>Simulasi Kasir PUYO</h3>
+   <p class="sub">Di gerai, kasir menawarkan member (gratis, berapa pun belanjanya) dan meminta nomor HP. Setelah dibayar, bot WhatsApp langsung mengirim pesan ke nomor itu.</p>
+   <label>Nomor HP pelanggan</label>
+   <input id="ph" type="tel" inputmode="tel" placeholder="0812 3456 7890" value="${esc(S.phone)}" ${S.phone?'disabled':''}>
+   <label>Produk yang dibeli</label>
+   <div class="seg" id="sp">${PRODUCTS.map((p,i)=>`<button data-v="${esc(p[1])}" class="${i===0?'on':''}">${p[0]}</button>`).join('')}</div>
+   <label>Dibeli lewat</label>
+   <div class="seg" id="sc"><button data-v="gerai" class="on">Gerai PUYO</button><button data-v="app">GoFood / GrabFood</button></div>
+   <div style="height:16px"></div>
+   <button class="primary" id="pay">Bayar</button>
+   <p class="sub" style="margin-top:10px">Stamp hanya diberikan untuk pembelian di gerai PUYO, bukan lewat aplikasi pesan antar.</p>
+   <h4>Tukar voucher di kasir</h4>
+   ${act.length?act.map(v=>`<div class="vrow"><div class="vt"><b>${esc(v.title)}</b><small>${esc(v.code)} · hingga ${dlong(v.exp)}</small></div><button data-redeem="${esc(v.code)}">Pakai</button></div>`).join(''):'<p class="sub">Belum ada voucher aktif.</p>'}
+  `);
+  $('#sheet').querySelectorAll('.seg').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))}));
+  $('#pay').onclick=()=>{
+    const phone=($('#ph').value||'').replace(/\D/g,'');
+    const prod=$('#sp .on').dataset.v, chan=$('#sc .on').dataset.v;
+    if(phone.length<9||phone.length>15){toast('Masukkan nomor HP yang valid (min. 9 digit).');return}
+    pay(phone,prod,chan);
+  };
+  $('#sheet').querySelectorAll('[data-redeem]').forEach(b=>b.onclick=()=>redeem(b.dataset.redeem));
+}
+function pay(phone,prod,chan){
+  if(chan==='app'){closeSheet();toast('Pesanan lewat aplikasi pesan antar tidak mendapat stamp (ketentuan program), jadi tidak ada pesan dari bot.');return}
+  if(S.stage==='new'){
+    S.phone=phone;S.pending={product:prod,ts:Date.now()};save();closeSheet();
+    toast('Pembayaran berhasil. Bot mengirim pesan ke nomor pelanggan…');
+    return startConsent(true);
+  }
+  if(S.stage==='declined'||S.stage==='stopped'){closeSheet();toast('Nomor ini sudah opt-out dari member (balas MEMBER di chat untuk gabung lagi). Tidak ada stamp.');return}
+  if(S.stage!=='member'){closeSheet();toast('Selesaikan pendaftaran member di chat dulu.');return}
+  closeSheet();toast('Pembayaran berhasil. Stamp dikonfirmasi lewat WhatsApp…');
+  addStamp(prod);
+}
+function redeem(code){
+  const v=S.vouchers.find(x=>x.code===code);if(!v||vState(v)!=='active')return;
+  v.used=true;save();closeSheet();render();toast('Voucher dipakai di kasir.');
+  say({kind:'text',text:`Voucher ${v.code} sudah dipakai. Terima kasih, ${first()}! Sampai ketemu lagi di PUYO. 💙`});
+}
+function cardSheet(){
+  const hist=S.purchases.slice(-8).reverse();
+  openSheet(`
+   <h3>Kartu Stamp PUYO Member</h3>
+   <p class="sub">${isMember()?`${esc(S.name)} · lahir ${S.bday.d} ${MONTHS[S.bday.m-1]} ${S.bday.y}`:'Belum terdaftar'}</p>
+   <div class="inner"><div class="stamps">${stampRow(S.stamps)}</div><div class="sl">${S.stamps}/${FREE_AT} stamp · ${FREE_AT-S.stamps} lagi untuk 1 PUYO gratis</div></div>
+   <h4>Voucher</h4>
+   ${S.vouchers.length?S.vouchers.slice().reverse().map(v=>{const st=vState(v);return`<div class="vrow"><div class="vt"><b>${esc(v.title)}</b><small>${esc(v.code)} · ${st==='used'?'sudah dipakai':st==='exp'?'kedaluwarsa':'hingga '+dlong(v.exp)}</small></div>${st==='active'?`<button data-code="${esc(v.code)}">Tunjukkan</button>`:''}</div>`}).join(''):'<p class="sub">Belum ada voucher.</p>'}
+   <h4>Riwayat stamp</h4>
+   ${hist.length?`<div class="hist">${hist.map(p=>`<div><span>${esc(p.product)}</span><span>${dlong(p.ts)}, ${hhmm(p.ts)}</span></div>`).join('')}</div>`:'<p class="sub">Belum ada pembelian tercatat.</p>'}
+   <button class="ghost" style="width:100%;margin-top:10px" data-close>Tutup</button>
+  `);
+  $('#sheet').querySelectorAll('[data-code]').forEach(b=>b.onclick=()=>showCode(b.dataset.code));
+  $('#sheet [data-close]').onclick=closeSheet;
+}
+function barcode(code){
+  let x=0,out='';
+  const seq=(code+code).split('').map(c=>c.charCodeAt(0));
+  seq.forEach((c,i)=>{for(let b=0;b<6;b++){const w=((c>>b)&1)?3:1.5;if(b%2===0)out+=`<rect x="${x}" y="0" width="${w}" height="70" fill="#111"/>`;x+=w+1}});
+  return`<svg class="bar" viewBox="0 0 ${x} 70" preserveAspectRatio="none">${out}</svg>`;
+}
+function showCode(code){
+  const v=S.vouchers.find(x=>x.code===code);if(!v)return;
+  closeSheet();
+  const ov=$('#codeov');
+  ov.innerHTML=`<div class="ico cream" style="width:72px;height:72px"><div style="width:52px">${CUP_V}</div></div><h2>${esc(v.title)}</h2><p>${esc(vDesc(v))}</p><div class="cd">${esc(v.code)}</div>${barcode(v.code)}<p style="margin-top:14px">Tunjukkan layar ini ke kasir. (Simulasi: kasir menekan “Pakai” di menu Simulasi Kasir.)</p><button class="primary" style="max-width:280px;margin-top:18px" id="ovx">Tutup</button>`;
+  ov.hidden=false;$('#ovx').onclick=()=>ov.hidden=true;
+}
+function aboutSheet(){
+  openSheet(`
+   <h3>Tentang prototype ini</h3>
+   <p class="sub">Prototype Loyalty Membership Program berbasis chatbot WhatsApp PUYO Group, bagian dari strategi pendukung di paper Strategic Management Kelompok 1 Branding 7C. Bukan akun atau aplikasi resmi PUYO; seluruh data tersimpan di HP kamu saja.</p>
+   <h4>Ketentuan program yang disimulasikan</h4>
+   <ul class="rules">
+     <li>Pendaftaran gratis lewat kasir (nomor HP), tanpa aplikasi.</li>
+     <li>Chatbot minta persetujuan data dulu; balas <b>STOP</b> kapan saja (UU PDP 27/2022).</li>
+     <li>5 stamp = 1 PUYO gratis (kode voucher).</li>
+     <li>Stamp hanya untuk pembelian di gerai, bukan GoFood/GrabFood.</li>
+     <li>Voucher ulang tahun dikirim otomatis di hari ulang tahun.</li>
+     <li>Pesan promo maks 2 kali per bulan, diskon maks 20%.</li>
+     <li>Info PUYOTEIN (BULK & CUT) untuk member.</li>
+   </ul>
+   <h4>Cara coba</h4>
+   <ul class="rules">
+     <li>Menu ⋮ → <b>Simulasi Kasir</b> → bayar di gerai, lalu ikuti chat.</li>
+     <li>Beli 5 kali di gerai untuk dapat voucher gratis.</li>
+     <li>Menu ⋮ → <b>hari ini ulang tahunku</b> untuk memicu pesan ulang tahun.</li>
+     <li>Tanya bebas: stamp, menu, PUYOTEIN, gerai terdekat, promo, data.</li>
+   </ul>
+   <p class="sub" style="margin-top:12px">Jawaban bot berbasis aturan (bukan AI). Soal di luar topik dijawab dengan arahan menu.</p>
+   <button class="ghost" style="width:100%" data-close>Tutup</button>`);
+  $('#sheet [data-close]').onclick=closeSheet;
+}
+function birthdaySim(){
+  if(!isMember()){toast('Daftar member dulu lewat Simulasi Kasir.');return}
+  const t=new Date();S.bday={d:t.getDate(),m:t.getMonth()+1,y:S.bday?S.bday.y:2001};save();
+  sendBirthday();
+}
+
+/* ============ events ============ */
+$('#dots').onclick=e=>{e.stopPropagation();$('#menu').hidden=!$('#menu').hidden};
+$('#scrim').onclick=closeSheet;
+document.addEventListener('click',e=>{if(!e.target.closest('#menu')&&!e.target.closest('#dots'))$('#menu').hidden=true});
+$('#menu').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;$('#menu').hidden=true;
+  ({kasir:kasirSheet,bday:birthdaySim,promo:sendPromo,about:aboutSheet,reset:()=>{if(confirm('Hapus semua data demo (chat, stamp, voucher) di HP ini?')){try{localStorage.removeItem(KEY)}catch(e){}location.reload()}}})[b.dataset.m]();
+});
+$('#msgs').addEventListener('click',e=>{
+  const q=e.target.closest('[data-qr]');if(q){userSend(q.dataset.qr);return}
+  const a=e.target.closest('[data-act]');if(!a)return;
+  const k=a.dataset.act;
+  if(k==='kasir')kasirSheet();
+  else if(k==='card')cardSheet();
+  else if(k==='code')showCode(a.dataset.v);
+  else if(k==='pilot')userSend('Lihat Gerai Pilot');
+});
+$('#back').onclick=()=>{if(history.length>1)history.back()};
+const inp=$('#inp');
+function syncIcon(){const has=!!inp.value.trim();$('#ic-mic').hidden=has;$('#ic-send').hidden=!has}
+inp.addEventListener('input',syncIcon);
+function submit(){const v=inp.value;if(!v.trim())return;inp.value='';syncIcon();userSend(v);inp.focus()}
+$('#f').addEventListener('submit',e=>{e.preventDefault();submit()});
+$('#send').addEventListener('click',e=>{e.preventDefault();submit()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkBirthday()});
+
+/* ============ boot ============ */
+render();
+setTimeout(checkBirthday,1200);
+})();
+</script>
+</body>
+</html>
