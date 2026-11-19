@@ -468,7 +468,7 @@ function replyProduct(id){
   return [{type:'product', pid:id, btns:[{l:'Tambah ke keranjang', a:'addcart:' + id, ic:'store'},{l:'Lihat varian lain', a:'products', ic:'list'}]}];
 }
 function replyPrices(){
-  return [{text:`*Daftar harga PUYO* 💰 (harga di gerai, per cup)\n\n🍮 Silky Desserts (11 varian) — *Rp15.000*\n💪 PUYOTEIN BULK / CUT — *Rp28.000*\n🎁 Hampers — mulai *Rp90.000*\n\n*Benefit PUYO Member*\n• Diskon member 10%, 1x per bulan: Silky Desserts jadi *Rp13.500*\n• Kumpulkan 5 stamp → *1 Silky Desserts gratis*\n• Hadiah 1 PUYO gratis di hari ulang tahun\n\n_Harga di GoFood/GrabFood dapat berbeda, dan pembelian lewat aplikasi tidak mendapat stamp._`,
+  return [{text:`*Daftar harga PUYO* 💰 (harga di gerai, per cup)\n\n🍮 Silky Desserts (11 varian) — *Rp15.000*\n💪 PUYOTEIN BULK / CUT — *Rp28.000*\n🎁 Hampers — mulai *Rp90.000*\n\n*Benefit PUYO Member*\n• Diskon member 10%, 1x per bulan: Silky Desserts jadi *Rp13.500*\n• Kumpulkan 5 stamp → *1 Silky Desserts gratis*\n• Hadiah 1 PUYO gratis di hari ulang tahun\n\n⭐ Stamp didapat dari pembelian di gerai *dan* pesanan lewat chat WhatsApp ini (pesan & ambil di gerai).\n_Harga di GoFood/GrabFood dapat berbeda, dan pembelian lewat GoFood/GrabFood tidak mendapat stamp._`,
     qr:[{l:'🛒 Pesan sekarang', a:'order'},{l:'🏷️ Promo bulan ini', a:'promo'},{l:S.member ? '⭐ Kartu stamp' : '⭐ Daftar member', a:S.member ? 'stamp' : 'reg'}]}];
 }
 function replyPuyotein(){
@@ -545,7 +545,7 @@ function replyStamp(){
     btns:[{l:'Lihat detail stamp & riwayat', a:'stamppop', ic:'list'},{l:'Pesan & ambil di gerai', a:'order', ic:'store'}]}];
 }
 function replyNotMember(lead){
-  return [{text:`${lead} Daftarnya gratis dan cukup lewat chat ini, Kak 😊\n\nBenefit PUYO Member:\n• Diskon 10% setiap bulan\n• 5 stamp = 1 PUYO gratis\n• 1 PUYO gratis di hari ulang tahun`, btns:[{l:'Daftar sekarang', a:'reg'},{l:'Nanti saja', a:'later'}]}];
+  return [{text:`${lead} Daftarnya gratis dan cukup lewat chat ini, Kak 😊\n\nBenefit PUYO Member:\n• Diskon 10% setiap bulan\n• 1 stamp tiap pembelian di gerai atau lewat chat ini, 5 stamp = 1 PUYO gratis\n• 1 PUYO gratis di hari ulang tahun`, btns:[{l:'Daftar sekarang', a:'reg'},{l:'Nanti saja', a:'later'}]}];
 }
 function replyBday(){
   if (!S.member) return replyNotMember('Hadiah ulang tahun diberikan untuk *PUYO Member* tepat di hari ulang tahunnya 🎂');
@@ -655,7 +655,7 @@ function finishReg(){
   const nb = nextBirthday(f.dob);
   const seq = [
     {text:`Selamat, *${S.member.name}*! 🎉\nKakak resmi menjadi *PUYO Member*. Berikut kartu member Kakak:`},
-    {type:'card', snap:snap(), text:'Setiap pembelian di gerai PUYO = 1 stamp. Kumpulkan 5 stamp untuk 1 PUYO gratis!'},
+    {type:'card', snap:snap(), text:'Setiap pembelian di gerai PUYO *atau pesanan lewat chat ini* = 1 stamp. Kumpulkan 5 stamp untuk 1 PUYO gratis!'},
     {type:'voucher', vid:v10.id, text:'Sebagai sambutan, ini voucher *diskon member 10%* untuk bulan ini. Tunjukkan kode ke kasir ya 😊'},
   ];
   if (isBday){
@@ -751,7 +751,7 @@ function onUserText(text){
     case 'stores': return bot(pre, replyStores());
     case 'nutrition': return bot(pre, {text:'Silky Desserts sekitar *±120 kkal per cup*, tanpa lemak trans dan tanpa pengawet 🍮\n\nIngin pilihan yang lebih tinggi protein? Coba *PUYOTEIN*: ±15 g protein dan *0 g gula tambahan* (BULK ±196 kkal, CUT ±127 kkal).', qr:[{l:'💪 PUYOTEIN', a:'puyotein'},{l:'🍮 Varian produk', a:'products'}]});
     case 'halal': return bot(pre, {text:'Semua produk PUYO sudah *bersertifikat halal* ✅ Kakak bisa menikmatinya dengan tenang 😊'});
-    case 'delivery': return bot(pre, {text:'PUYO juga bisa dipesan melalui *GoFood* dan *GrabFood* 🛵\n\nCatatan: stamp dan diskon member *hanya berlaku untuk pembelian langsung di gerai PUYO*, ya Kak.', qr:[{l:'📍 Lokasi gerai', a:'stores'}]});
+    case 'delivery': return bot(pre, {text:'PUYO juga bisa dipesan melalui *GoFood* dan *GrabFood* 🛵\n\nCatatan: stamp dan diskon member *tidak berlaku* untuk GoFood/GrabFood, ya Kak. Supaya tetap dapat stamp, Kakak bisa *pesan lewat chat ini* lalu ambil di gerai terdekat 🛒', qr:[{l:'📍 Lokasi gerai', a:'stores'}]});
     case 'hours': return bot(pre, {text:'Gerai PUYO buka mengikuti jam operasional mal atau lokasi masing-masing, umumnya pukul *10.00–22.00* 🕙', qr:[{l:'📍 Lokasi gerai', a:'stores'}]});
     case 'human': return bot(pre, {text:'Mohon maaf, Kak 🙏 Chat ini adalah *prototype* untuk tugas kuliah, sehingga belum terhubung dengan admin PUYO. Untuk keperluan resmi, silakan menghubungi kanal resmi PUYO di puyodesserts.com.'});
     case 'products': return bot(pre, replyProducts());
@@ -823,7 +823,7 @@ function openStampPopup(focusTx){
   }
   const card = `<div class="card big"><div class="mcard"><div class="mt"><div><div class="k">PUYO Member</div><div class="nm">${esc(S.member.name)}</div><div class="id">${esc(S.member.mid)} · bergabung ${dShort(S.member.joinedAt)}</div></div><img class="lg" src="img/logo.png" alt=""></div><div class="slots">${slots.join('')}</div><div class="ms">${cur.length}/5 stamp · ${5 - cur.length} lagi untuk 1 PUYO gratis · kartu ke-${S.cardsDone.length + 1}</div></div></div>`;
   const txRow = (t, label, gray) => `<div class="trx" data-txrow="${t.id}"><div class="th"><div class="tn${gray ? ' gray' : ''}">${label}</div><div class="ti"><div class="t1">PUYO ${esc(oName(t.outlet.n))}</div><div class="t2">${dLong(t.at)} · ${hhmm(t.at)} · ${esc(t.outlet.c)}</div></div><div class="ta">${rp(t.total)}</div></div><div class="td">${t.items.map(it => `${it.qty}× ${esc(it.name)} — ${rp(it.qty * it.price)}`).join('<br>')}${t.disc ? `<br><span style="color:#1c8f72">${esc(t.discLabel)}: −${rp(t.disc)}</span>` : ''}<br>${esc(t.outlet.f)}${t.outlet.f ? ' · ' : ''}${esc(t.id)}${t.outlet.u ? ` · <a href="${esc(t.outlet.u)}" target="_blank" rel="noopener">Maps ↗</a>` : ''}</div></div>`;
-  const curList = cur.length ? cur.map((t, i) => txRow(t, '⭐' + (i + 1))).join('') : '<div class="empty">Belum ada stamp di kartu ini. Setiap pesanan yang diambil di gerai PUYO = 1 stamp.</div>';
+  const curList = cur.length ? cur.map((t, i) => txRow(t, '⭐' + (i + 1))).join('') : '<div class="empty">Belum ada stamp di kartu ini. Setiap pembelian di gerai atau pesanan lewat chat ini = 1 stamp.</div>';
   const older = S.txs.filter(t => !S.stamps.includes(t.id)).slice().reverse();
   const olderList = older.length ? older.map(t => txRow(t, t.stampNo ? '⭐' + t.stampNo : '–', true)).join('') : '';
   const vs = S.vouchers.slice().reverse();
@@ -997,7 +997,7 @@ function openCheckout(){
         ${pm('qris', '<b class="qris">QRIS</b>', 'QRIS', 'Bayar sekarang lewat e-wallet / m-banking, pesanan langsung diproses')}
         ${pm('cash', '💵', 'Tunai di gerai', 'Bayar di kasir saat mengambil pesanan')}
         <div class="sumbox"><div class="sl"><span>Ambil di</span><span style="text-align:right">PUYO ${esc(oName(o.n))}</span></div><div class="sl"><span>Waktu</span><span>${K.slot === 'asap' ? 'Secepatnya (±15 menit)' : esc(pickupSlots().find(s => s.t === K.slot)?.l || '')}</span></div><div class="sl"><span>${c.items.reduce((a, i) => a + i.qty, 0)} item</span><span>${rp(c.subtotal)}</span></div>${c.disc ? `<div class="sl" style="color:#1c8f72"><span>${esc(c.discLabel)}</span><span>−${rp(c.disc)}</span></div>` : ''}<div class="sl tot"><span>Total bayar</span><span>${rp(c.total)}</span></div></div>
-        <div class="hint">Setiap pesanan yang sudah diambil di gerai mendapat <b>1 stamp</b>.</div>`;
+        <div class="hint">Pesanan lewat chat WhatsApp ini mendapat <b>1 stamp</b>, tercatat begitu pesanan diambil di gerai.</div>`;
       $$('[data-p]', kb).forEach(b => b.onclick = () => { K.pay = b.dataset.p; draw(); });
       foot();
     }
@@ -1144,12 +1144,65 @@ function replyOrdersList(){
   return [{text:`Kakak punya ${act0.length} pesanan yang sedang berjalan:`}, ...act0.map(o => ({type:'order', oid:o.id}))];
 }
 
+const WEB = 'https://www.puyodesserts.com';
 function openInfo(){
-  sheet('Info kontak', `<div class="info-top"><img src="img/wa-avatar.png" alt=""><h2>PUYO Group ${VBADGE}</h2><p>Akun bisnis · Silky Desserts</p></div>
-  <div class="irow">Pionir silky pudding di Indonesia sejak 2013 🍮 ${OUTLETS.length}+ gerai di Jawa & Bali.<small>Deskripsi</small></div>
-  <div class="irow">Umumnya 10.00–22.00, mengikuti jam operasional mal<small>Jam buka</small></div>
-  <div class="irow"><a href="https://puyodesserts.com" target="_blank" rel="noopener">puyodesserts.com</a><small>Situs web</small></div>
-  <div class="irow">Prototype chatbot PUYO Member untuk tugas Strategic Management, Kelompok 1 Branding 7C, Universitas Prasetiya Mulya. <b>Bukan akun resmi PUYO.</b> Bot berbasis aturan, tanpa server: setiap perangkat menyimpan datanya sendiri (nama, stamp, voucher) di browser.<small>Tentang prototype</small></div>`);
+  if ($('.prof')) return;
+  const now = new Date(), h = now.getHours() + now.getMinutes() / 60, isOpen = h >= 10 && h < 22;
+  const cities = CITIES_BY_COUNT.slice(0, 6).join(', ');
+  const m = S.member;
+  const p = document.createElement('div');
+  p.className = 'prof';
+  p.innerHTML = `<div class="ph"><button class="pback" aria-label="Kembali"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><span>Info bisnis</span></div>
+  <div class="pbody">
+    <div class="pcard ptop">
+      <img class="pav" src="img/wa-avatar.png" alt="Foto profil PUYO Group">
+      <h2>PUYO Group ${VBADGE}</h2>
+      <div class="pcat">Akun bisnis · Toko makanan penutup</div>
+      <div class="pacts">
+        <button data-pa="chat"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 18.5V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8z"/></svg>Chat</button>
+        <button data-pa="catalog"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M9 20v-6h6v6"/></svg>Katalog</button>
+        <a href="${WEB}" target="_blank" rel="noopener"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>Website</a>
+        <button data-pa="share"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Bagikan</button>
+      </div>
+    </div>
+    <div class="pcard">
+      <div class="pdesc">Pionir <b>silky pudding</b> di Indonesia sejak 2013 🍮 Berawal dari dapur rumah Adrian Agus & Eugenie Patricia Agus, kini PUYO hadir dengan <b>Silky Desserts</b> dan <b>Silky Drinks</b> di lebih dari 220 gerai di Jawa & Bali.<br><i>"Delivering happiness, one customer at a time."</i></div>
+      <div class="prow"><span class="pi">🏷️</span><div>Toko makanan penutup<small>Kategori</small></div></div>
+      <div class="prow"><span class="pi">🕙</span><div><b class="${isOpen ? 'po' : 'pc'}">${isOpen ? 'Buka sekarang' : 'Tutup sekarang'}</b> · 10.00–22.00<small>Jam buka (mengikuti jam operasional mal)</small></div></div>
+      <a class="prow" href="#" data-pa="stores"><span class="pi">📍</span><div>${OUTLETS.length} gerai tercantum di website · ${esc(cities)}, dll.<small>Lokasi gerai · cari gerai terdekat ›</small></div></a>
+      <a class="prow" href="${WEB}" target="_blank" rel="noopener"><span class="pi">🌐</span><div class="plink">www.puyodesserts.com<small>Situs web resmi PUYO ↗</small></div></a>
+      <div class="prow"><span class="pi">✅</span><div>Bersertifikat halal<small>Produk</small></div></div>
+    </div>
+    <div class="pcard">
+      <div class="psec"><span>Katalog</span><button data-pa="catalog">Lihat semua ›</button></div>
+      <div class="pcat-row">${[...SILKY.slice(0, 5), ...PROTEIN].map(x => `<button class="pci" data-pa="prod:${x.id}"><img src="${x.img}" alt=""><span>${esc(x.name.replace('Silky ', ''))}</span><b>${rp(x.price)}</b></button>`).join('')}</div>
+    </div>
+    ${m ? `<div class="pcard"><div class="psec"><span>PUYO Member</span><button data-pa="stamp">Kartu stamp ›</button></div><div class="pmem"><div class="pmav">${esc(m.name.trim()[0].toUpperCase())}</div><div><b>${esc(m.name)}</b> · ${esc(m.mid)}<small>${S.stamps.length}/5 stamp · bergabung ${dShort(m.joinedAt)}</small></div></div></div>` : `<div class="pcard"><div class="psec"><span>PUYO Member</span></div><div class="pdesc" style="margin:0">Diskon 10% setiap bulan, 1 stamp tiap pembelian di gerai atau pesanan lewat chat ini (5 stamp = 1 PUYO gratis), dan hadiah di hari ulang tahun.</div><button class="pbtn" data-pa="reg" style="margin-top:10px">Daftar PUYO Member</button></div>`}
+    <div class="pcard">
+      <div class="prow"><span class="pi">🔒</span><div>Pesan dan data hanya tersimpan di perangkat ini.<small>Privasi</small></div></div>
+      <button class="prow pdanger" data-pa="reset"><span class="pi">🗑️</span><div>Hapus chat & mulai ulang</div></button>
+    </div>
+    <div class="pfoot">Prototype chatbot PUYO Member untuk tugas Strategic Management, Kelompok 1 Branding 7C, Universitas Prasetiya Mulya. Bukan akun resmi PUYO.</div>
+  </div>`;
+  $('#chat').appendChild(p);
+  const close = () => { p.classList.add('out'); setTimeout(() => p.remove(), 260); document.removeEventListener('keydown', onKey); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  $('.pback', p).onclick = close;
+  $('.pav', p).onclick = () => { const v = document.createElement('div'); v.className = 'viewer'; v.innerHTML = `<div class="vh"><img src="img/wa-avatar.png" alt=""><div style="flex:1"><b>PUYO Group</b></div></div><div class="vb"><img src="img/wa-avatar.png" alt="" style="border-radius:50%;max-width:min(80vw,420px)"></div>`; v.onclick = () => v.remove(); document.body.appendChild(v); };
+  $$('[data-pa]', p).forEach(b => b.onclick = async ev => {
+    if (ev) ev.preventDefault();
+    const a = b.dataset.pa;
+    if (a === 'chat') return close();
+    if (a === 'share'){
+      const url = location.href.split('#')[0];
+      try { if (navigator.share){ await navigator.share({title:'PUYO Group', text:'Chat PUYO Group (prototype)', url}); return; } await navigator.clipboard.writeText(url); toast('Link chat disalin ✓'); } catch(e){ toast('Link: ' + url); }
+      return;
+    }
+    if (a === 'reset') return menuAct('reset');
+    close();
+    setTimeout(() => { if (a === 'catalog') openCatalog(); else if (a === 'stamp') openStampPopup(); else if (a === 'reg') act('reg', 'Daftar PUYO Member'); else if (a === 'stores') act('stores', '📍 Lokasi gerai'); else if (a.startsWith('prod:')) act(a, P(a.slice(5)).name); }, 270);
+  });
 }
 function openAttach(){
   const ov = sheet('Kirim', `<button class="lopt" data-a="catalog"><div class="lic">🍮</div><div><div class="lt">Katalog</div><div class="ld">Pilih menu & masukkan ke keranjang</div></div></button>
@@ -1163,7 +1216,7 @@ function openMenu(){
   if ($('.dd')) return closeDD();
   const d = document.createElement('div');
   d.className = 'dd';
-  d.innerHTML = `<button data-m="info">Info kontak</button><button data-m="orders">Pesanan saya</button><button data-m="cart">Keranjang</button><button data-m="stamp">Kartu stamp & voucher</button><button data-m="promo">Simulasi: kirim pesan promo bulan ini</button><hr><button data-m="reset" class="danger">Hapus chat & mulai ulang</button>`;
+  d.innerHTML = `<button data-m="info">Info bisnis</button><button data-m="orders">Pesanan saya</button><button data-m="cart">Keranjang</button><button data-m="stamp">Kartu stamp & voucher</button><button data-m="promo">Simulasi: kirim pesan promo bulan ini</button><hr><button data-m="reset" class="danger">Hapus chat & mulai ulang</button>`;
   $('#chat').appendChild(d);
   setTimeout(() => document.addEventListener('click', closeDD, {once:true}), 0);
   $$('button', d).forEach(b => b.onclick = e => { e.stopPropagation(); closeDD(); menuAct(b.dataset.m); });
@@ -1306,7 +1359,7 @@ renderAll();
 if (!S.msgs.length){
   bot({wait:300},
     {text:'Halo! 👋 Selamat datang di WhatsApp *PUYO Group* 🍮\nKami siap membantu info varian puding, harga, lokasi gerai, hampers, dan promo. Kakak juga bisa *pesan lewat chat dan ambil di gerai terdekat* 🛒 Ketik *Halo* kapan saja untuk melihat menu.'},
-    {text:'Belum jadi member? Gabung *PUYO Member* gratis dan nikmati:\n• Diskon 10% setiap bulan\n• 5 stamp = 1 PUYO gratis\n• 1 PUYO gratis tepat di hari ulang tahun 🎂', btns:[{l:'Daftar sekarang', a:'reg'},{l:'Lihat menu', a:'menu', ic:'list'}]});
+    {text:'Belum jadi member? Gabung *PUYO Member* gratis dan nikmati:\n• Diskon 10% setiap bulan\n• 1 stamp tiap pembelian di gerai atau pesanan lewat chat ini, 5 stamp = 1 PUYO gratis\n• 1 PUYO gratis tepat di hari ulang tahun 🎂', btns:[{l:'Daftar sekarang', a:'reg'},{l:'Lihat menu', a:'menu', ic:'list'}]});
 } else {
   orderTick();
   setTimeout(realtimeCheck, 1200);
