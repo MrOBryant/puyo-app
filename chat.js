@@ -509,7 +509,7 @@ function replyStores(city){
     return [{type:'outlets', ids:show.map(o => o.i), text:`Ada *${list.length} gerai PUYO* di ${city}${list.length > show.length ? `, berikut ${show.length} di antaranya` : ''} 📍`,
       qr:list.length > show.length ? [{l:`Lihat semua di ${city}`, a:'allcity:' + city},{l:'📍 Kirim lokasi saya', a:'loc'}] : [{l:'📍 Kirim lokasi saya', a:'loc'},{l:'Lihat menu', a:'menu'}]}];
   }
-  return [{text:`Gerai PUYO tersebar di Jawa dan Bali 📍 (${OUTLETS.length} gerai tercantum di website PUYO).\n\nAgar kami bisa mencarikan gerai *terdekat*, silakan kirim lokasi Kakak, atau ketik nama kota/mal (contoh: _BSD_, _Surabaya_, _Kelapa Gading_).`,
+  return [{text:`PUYO kini punya *220+ gerai* di Jawa dan Bali 📍 Sebanyak ${OUTLETS.length} lokasi yang tercantum di website resmi puyodesserts.com bisa langsung Kakak cari di sini.\n\nAgar kami bisa mencarikan gerai *terdekat*, silakan kirim lokasi Kakak, atau ketik nama kota/mal (contoh: _BSD_, _Surabaya_, _Kelapa Gading_).`,
     btns:[{l:'Kirim lokasi saya', a:'loc', ic:'pin'}],
     qr:['Tangerang','Jakarta Selatan','Jakarta Barat','Surabaya','Bekasi','Bandung','Bali','Semarang'].map(c => ({l:c, a:'city:' + c}))}];
 }
@@ -950,7 +950,7 @@ function openCheckout(){
       kb.innerHTML = `${steps()}<div class="sttl">1. Pilih gerai untuk pickup</div><div class="srch"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667781" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="kq" placeholder="Cari mal, area, atau kota (mis. BSD, Kelapa Gading)…" value="${esc(K.q)}"></div>
         <button class="nearb" id="nearB">${IC.pin} Urutkan dari lokasi saya</button>
         ${K.q ? '' : `<div class="cities">${cities.map(c => `<button data-c="${esc(c)}" class="${c === K.city ? 'on' : ''}">${esc(c)}</button>`).join('')}</div>`}
-        <div class="ocount">${list.length} gerai${K.q ? ` untuk "${esc(K.q)}"` : K.city === 'Semua' ? ' PUYO' : ' di ' + esc(K.city)}</div>
+        <div class="ocount">${list.length} gerai${K.q ? ` untuk "${esc(K.q)}"` : K.city === 'Semua' ? ' (lokasi yang tercantum di website resmi PUYO)' : ' di ' + esc(K.city)}</div>
         <div>${list.map(o => `<button class="oo${o.i === K.outlet ? ' on' : ''}" data-o="${o.i}"><span class="rd"></span><span style="flex:1;min-width:0"><div class="on1">PUYO ${esc(oName(o.n))}</div><div class="on2">${esc(o.f)}${o.f ? ' · ' : ''}${esc(o.c)}${K.sort && K.sort[o.c] != null ? ` · ±${Math.round(K.sort[o.c])} km` : ''}</div></span></button>`).join('') || '<div class="empty">Gerai tidak ditemukan. Coba kata lain, mis. nama mal atau kota.</div>'}</div>`;
       const qi = $('#kq', kb);
       qi.oninput = () => { K.q = qi.value; const pos = qi.selectionStart; draw(); const n = $('#kq', kb); n.focus(); n.setSelectionRange(pos, pos); };
@@ -1134,7 +1134,7 @@ function openOrders(){
 }
 function replyOrderStart(){
   const n = cartCount();
-  return [{text:`Siap, Kak! 🛒 Kakak bisa *pesan dulu lewat chat ini lalu ambil sendiri* di gerai PUYO pilihan Kakak.\n\n1. Pilih menu di katalog & masukkan ke keranjang\n2. Checkout: pilih gerai pickup (semua ${OUTLETS.length} gerai bisa dicari) & waktu ambil\n3. Bayar dengan *QRIS* atau *tunai di gerai*\n4. Ambil pesanan dengan menunjukkan kode ambil → dapat *1 stamp* ⭐${n ? `\n\nDi keranjang Kakak sudah ada ${n} item (${rp(cartTotal())}).` : ''}`,
+  return [{text:`Siap, Kak! 🛒 Kakak bisa *pesan dulu lewat chat ini lalu ambil sendiri* di gerai PUYO pilihan Kakak.\n\n1. Pilih menu di katalog & masukkan ke keranjang\n2. Checkout: pilih gerai pickup (${OUTLETS.length} lokasi dari website resmi PUYO bisa dicari) & waktu ambil\n3. Bayar dengan *QRIS* atau *tunai di gerai*\n4. Ambil pesanan dengan menunjukkan kode ambil → dapat *1 stamp* ⭐${n ? `\n\nDi keranjang Kakak sudah ada ${n} item (${rp(cartTotal())}).` : ''}`,
     btns:[{l:'Buka katalog', a:'catalog', ic:'list'}].concat(n ? [{l:`Lihat keranjang (${n})`, a:'cart', ic:'store'}] : [])}];
 }
 function replyOrdersList(){
@@ -1169,7 +1169,7 @@ function openInfo(){
       <div class="pdesc">Pionir <b>silky pudding</b> di Indonesia sejak 2013 🍮 Berawal dari dapur rumah Adrian Agus & Eugenie Patricia Agus, kini PUYO hadir dengan <b>Silky Desserts</b> dan <b>Silky Drinks</b> di lebih dari 220 gerai di Jawa & Bali.<br><i>"Delivering happiness, one customer at a time."</i></div>
       <div class="prow"><span class="pi">🏷️</span><div>Toko makanan penutup<small>Kategori</small></div></div>
       <div class="prow"><span class="pi">🕙</span><div><b class="${isOpen ? 'po' : 'pc'}">${isOpen ? 'Buka sekarang' : 'Tutup sekarang'}</b> · 10.00–22.00<small>Jam buka (mengikuti jam operasional mal)</small></div></div>
-      <a class="prow" href="#" data-pa="stores"><span class="pi">📍</span><div>${OUTLETS.length} gerai tercantum di website · ${esc(cities)}, dll.<small>Lokasi gerai · cari gerai terdekat ›</small></div></a>
+      <a class="prow" href="#" data-pa="stores"><span class="pi">📍</span><div>220+ gerai di Jawa & Bali · ${OUTLETS.length} lokasi tercantum di website (${esc(cities)}, dll.)<small>Lokasi gerai · cari gerai terdekat ›</small></div></a>
       <a class="prow" href="${WEB}" target="_blank" rel="noopener"><span class="pi">🌐</span><div class="plink">www.puyodesserts.com<small>Situs web resmi PUYO ↗</small></div></a>
       <div class="prow"><span class="pi">✅</span><div>Bersertifikat halal<small>Produk</small></div></div>
     </div>
