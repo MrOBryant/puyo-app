@@ -114,7 +114,7 @@ const CITIES_BY_COUNT = Object.entries(OUTLETS.reduce((a, o) => (a[o.c] = (a[o.c
 /* ================= state ================= */
 const KEY = 'puyo_wa_chat_v3';
 const fresh = () => ({v:3, created:Date.now(), msgs:[], member:null, flow:null, txs:[], vouchers:[], stamps:[], cardsDone:[],
-  lastOutlet:null, nearCity:null, bdayYears:[], menuOn:false, optOut:false, promoSent:{}});
+  lastOutlet:null, nearCity:null, bdayYears:[], menuOn:false, optOut:false, promoSent:{}, cart:{}, orders:[]});
 let S;
 function load(){ try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && j.v === 3) return Object.assign(fresh(), j); } catch(e){} return null; }
 function save(){ try { if (S.msgs.length > 400) S.msgs = S.msgs.slice(-400); localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
@@ -193,7 +193,7 @@ function bubble(m, anim){
     case 'loc':
       return `<div class="b media${A}"><div class="locmsg"><div class="map"><svg width="34" height="34" viewBox="0 0 24 24" fill="#ea4335"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg></div><div class="lc"><b>Lokasi saya</b><br><span style="color:var(--mut);font-size:12px">${esc(m.label || '')}</span>${meta(m)}</div></div></div>`;
     case 'products': {
-      const secs = m.sections.map(s => `<div class="secttl">${esc(s.t)}</div><div class="car">${s.ids.map(id => { const p = P(id); return `<div class="pc" data-prod="${p.id}">${p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ''}<div class="im"><img src="${p.img}" alt="${esc(p.name)}" loading="lazy"></div><div class="pt">${esc(p.name)}</div><div class="pp">${rp(p.price)}</div></div>`; }).join('')}</div>`).join('');
+      const secs = m.sections.map(s => `<div class="secttl">${esc(s.t)}</div><div class="car">${s.ids.map(id => { const p = P(id); return `<div class="pc" data-prod="${p.id}">${p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ''}<div class="im"><img src="${p.img}" alt="${esc(p.name)}" loading="lazy"></div><div class="pt">${esc(p.name)}</div><div class="pp">${rp(p.price)}</div><button class="padd" data-add="${p.id}" aria-label="Tambah ke keranjang">+</button></div>`; }).join('')}</div>`).join('');
       return `<div class="b wide${A}" style="width:min(92%,640px)">${m.text ? `<div class="tx">${md(m.text)}</div>` : ''}${secs}${meta(m)}${btnsHTML(m)}</div>`;
     }
     case 'product': {
@@ -213,7 +213,11 @@ function bubble(m, anim){
     }
     case 'outlets': {
       const list = m.ids.map(i => OUTLETS[i]).filter(Boolean);
-      return `<div class="b wide${A}" style="width:min(86%,400px)"><div class="tx">${md(m.text)}</div><div class="olist" style="margin-top:6px">${list.map(o => `<div class="ol"><div class="pin">${IC.pin}</div><div style="flex:1;min-width:0"><div class="on">PUYO ${esc(oName(o.n))}</div><div class="of">${esc(o.f)}${o.f ? ' · ' : ''}${esc(o.c)}</div>${o.u ? `<a href="${esc(o.u)}" target="_blank" rel="noopener">Buka di Google Maps ↗</a>` : ''}</div></div>`).join('')}</div>${meta(m)}${btnsHTML(m)}</div>`;
+      return `<div class="b wide${A}" style="width:min(86%,400px)"><div class="tx">${md(m.text)}</div><div class="olist" style="margin-top:6px">${list.map(o => `<div class="ol"><div class="pin">${IC.pin}</div><div style="flex:1;min-width:0"><div class="on">PUYO ${esc(oName(o.n))}</div><div class="of">${esc(o.f)}${o.f ? ' · ' : ''}${esc(o.c)}</div><div class="olinks">${o.u ? `<a href="${esc(o.u)}" target="_blank" rel="noopener">Google Maps ↗</a>` : ''}<a href="#" data-pick="${o.i}">🛒 Pickup di sini</a></div></div></div>`).join('')}</div>${meta(m)}${btnsHTML(m)}</div>`;
+    }
+    case 'order': {
+      const od = (S.orders || []).find(x => x.id === m.oid);
+      return `<div class="b media${A}" style="width:min(90%,370px)">${od ? orderHTML(od) : ''}<div class="cap">${m.text ? `<div class="tx">${md(m.text)}</div>` : ''}${meta(m)}</div></div>`;
     }
     case 'hampers':
       return `<div class="b wide${A}" style="width:min(88%,400px)">${m.text ? `<div class="tx">${md(m.text)}</div>` : ''}${m.ids.map(id => hamperHTML(HAMPERS.find(h => h.id === id))).join('')}${meta(m)}${btnsHTML(m)}</div>`;
@@ -224,7 +228,7 @@ function bubble(m, anim){
 function hamperHTML(h){
   const four = h.items.length === 4;
   const imgs = (h.items.length > 6 ? h.items.slice(0, 6) : h.items).map(id => `<img src="${P(id).img}" alt="">`).join('');
-  return `<div class="hcard" data-hamper="${h.id}"><div class="hg${four ? ' four' : ''}">${imgs}</div><div class="hb"><div class="hn"><span>${esc(h.name)}</span><span class="hp">${rp(h.price)}</span></div><div class="hd">${esc(h.desc)}</div></div></div>`;
+  return `<div class="hcard" data-hamper="${h.id}"><div class="hg${four ? ' four' : ''}">${imgs}</div><div class="hb"><div class="hn"><span>${esc(h.name)}</span><span class="hp">${rp(h.price)}</span></div><div class="hd">${esc(h.desc)}</div><button class="hadd" data-add="${h.id}">🛒 Tambah ke keranjang</button></div></div>`;
 }
 function memberCardHTML(s, anim){
   const slots = [];
@@ -278,7 +282,7 @@ function updateSide(){
   $('#ciTime').textContent = m ? (dayKey(m.at) === dayKey(Date.now()) ? hhmm(m.at) : dShort(m.at)) : '';
   let pv = 'Ketik "Halo" untuk mulai';
   if (m){
-    pv = m.type === 'text' ? m.text.replace(/[*_~]/g, '').split('\n')[0] : {products:'🍮 Katalog produk',product:'📷 Foto produk',card:'⭐ Kartu member',voucher:'🎟️ Voucher',receipt:'🧾 Struk pembelian',outlets:'📍 Lokasi gerai',hampers:'🎁 Hampers',loc:'📍 Lokasi'}[m.type] || '';
+    pv = m.type === 'text' ? m.text.replace(/[*_~]/g, '').split('\n')[0] : {products:'🍮 Katalog produk',product:'📷 Foto produk',card:'⭐ Kartu member',voucher:'🎟️ Voucher',receipt:'🧾 Struk pembelian',order:'🧾 Pesanan',outlets:'📍 Lokasi gerai',hampers:'🎁 Hampers',loc:'📍 Lokasi'}[m.type] || '';
     if (m.from === 'me') pv = '✓✓ ' + pv;
   }
   $('#ciPrev').textContent = pv;
@@ -401,9 +405,10 @@ const INTENTS = {
   nutrition:['kalori','calorie','calories','kkal','kcal','gula','sugar','sehat','healthy','gizi','nutrisi','nutrition','lemak','fat','diabetes'],
   human:['admin','cs','customer service','manusia','human','agent','operator','komplain','complain','complaint','keluhan','telepon','telpon','call'],
   stop:['stop','berhenti','unsubscribe','jangan kirim'],
-  kasir:['kasir','beli','checkout','bayar','pesan','order'],
+  orders:['pesanan saya','status pesanan','lacak','lacak pesanan','tracking','track','my order','pesananku','order saya','cek pesanan'],
+  order:['pesan','beli','order','keranjang','cart','checkout','pickup','pick up','ambil','take away','takeaway','buy','purchase','mau beli','mau pesan','bayar','qris','cash','tunai'],
 };
-const NUM_MENU = {1:'products',2:'prices',3:'stores',4:'hampers',5:'promo',6:'stamp',7:'puyotein',8:'bday'};
+const NUM_MENU = {1:'order',2:'products',3:'prices',4:'stores',5:'hampers',6:'promo',7:'stamp',8:'orders',9:'bday'};
 function detect(text){
   const n = norm(text);
   const sc = {};
@@ -440,8 +445,9 @@ const kak = () => S.member ? `Kak ${S.member.name.split(' ')[0]}` : 'Kak';
 function menuMsg(intro){
   S.menuOn = true; save();
   const m6 = S.member ? '⭐ Kartu stamp & voucher saya' : '⭐ Daftar PUYO Member (gratis)';
-  return {text:(intro ? intro + '\n\n' : '') + `Silakan ketik *angka* atau pilih dari menu di bawah ini, atau langsung tulis pertanyaan Kakak 😊\n\n1️⃣ Varian produk\n2️⃣ Daftar harga\n3️⃣ Lokasi gerai PUYO\n4️⃣ Hampers\n5️⃣ Promo bulan ini\n6️⃣ ${m6.slice(2)}\n7️⃣ PUYOTEIN (puding protein)\n8️⃣ Hadiah ulang tahun`,
+  return {text:(intro ? intro + '\n\n' : '') + `Silakan ketik *angka* atau pilih dari menu di bawah ini, atau langsung tulis pertanyaan Kakak 😊\n\n1️⃣ Pesan & ambil di gerai (pickup) 🛒\n2️⃣ Varian produk & PUYOTEIN\n3️⃣ Daftar harga\n4️⃣ Lokasi gerai PUYO\n5️⃣ Hampers\n6️⃣ Promo bulan ini\n7️⃣ ${m6.slice(2)}\n8️⃣ Pesanan saya\n9️⃣ Hadiah ulang tahun`,
     list:{btn:'Lihat menu', title:'Menu PUYO', secs:[
+      {t:'Pesan', o:[['order','🛒','Pesan & ambil di gerai','Bayar QRIS atau tunai, ambil di gerai pilihan'],['orders','🧾','Pesanan saya','Status & riwayat pickup']]},
       {t:'Produk', o:[['products','🍮','Varian produk','11 rasa Silky Desserts + PUYOTEIN'],['prices','💰','Daftar harga','Harga per cup & harga member'],['puyotein','💪','PUYOTEIN','Puding protein, 0 g gula tambahan'],['hampers','🎁','Hampers','Paket hadiah 4–12 cup']]},
       {t:'Gerai & promo', o:[['stores','📍','Lokasi gerai','Cari gerai PUYO terdekat'],['promo','🏷️','Promo bulan ini',`Promo ${BULAN[new Date().getMonth()]} + diskon member`]]},
       {t:'PUYO Member', o:[[S.member ? 'stamp' : 'reg','⭐',S.member ? 'Kartu stamp & voucher' : 'Daftar PUYO Member', S.member ? 'Cek stamp & riwayat transaksi' : 'Diskon 10%/bulan, stamp, hadiah ultah'],['bday','🎂','Hadiah ulang tahun','1 PUYO gratis di hari ulang tahun']]},
@@ -455,15 +461,15 @@ function replyGreeting(text){
 function replyProducts(){
   return [{text:'Berikut varian puding PUYO 🍮\nGeser untuk melihat semua varian, lalu ketuk produk untuk melihat detailnya.'},
     {type:'products', sections:[{t:'Silky Desserts · Rp15.000/cup', ids:SILKY.map(p => p.id)}, {t:'PUYOTEIN · Rp28.000/cup', ids:PROTEIN.map(p => p.id)}],
-     qr:[{l:'💰 Daftar harga', a:'prices'},{l:'🎁 Hampers', a:'hampers'},{l:'📍 Lokasi gerai', a:'stores'}]}];
+     qr:[{l:'🛒 Buka katalog & pesan', a:'catalog'},{l:'💰 Daftar harga', a:'prices'},{l:'🎁 Hampers', a:'hampers'}]}];
 }
 function replyProduct(id){
   const p = P(id);
-  return [{type:'product', pid:id, btns:[{l:'Lihat varian lain', a:'products'},{l:'Cari gerai terdekat', a:'stores', ic:'pin'}]}];
+  return [{type:'product', pid:id, btns:[{l:'Tambah ke keranjang', a:'addcart:' + id, ic:'store'},{l:'Lihat varian lain', a:'products', ic:'list'}]}];
 }
 function replyPrices(){
   return [{text:`*Daftar harga PUYO* 💰 (harga di gerai, per cup)\n\n🍮 Silky Desserts (11 varian) — *Rp15.000*\n💪 PUYOTEIN BULK / CUT — *Rp28.000*\n🎁 Hampers — mulai *Rp90.000*\n\n*Benefit PUYO Member*\n• Diskon member 10%, 1x per bulan: Silky Desserts jadi *Rp13.500*\n• Kumpulkan 5 stamp → *1 Silky Desserts gratis*\n• Hadiah 1 PUYO gratis di hari ulang tahun\n\n_Harga di GoFood/GrabFood dapat berbeda, dan pembelian lewat aplikasi tidak mendapat stamp._`,
-    qr:[{l:'🍮 Varian produk', a:'products'},{l:'🏷️ Promo bulan ini', a:'promo'},{l:S.member ? '⭐ Kartu stamp' : '⭐ Daftar member', a:S.member ? 'stamp' : 'reg'}]}];
+    qr:[{l:'🛒 Pesan sekarang', a:'order'},{l:'🏷️ Promo bulan ini', a:'promo'},{l:S.member ? '⭐ Kartu stamp' : '⭐ Daftar member', a:S.member ? 'stamp' : 'reg'}]}];
 }
 function replyPuyotein(){
   return [{text:'*PUYOTEIN* 💪 — puding protein dari PUYO\n_Enjoy Your Dessert, Fuel Your Goals._\n\n• ±15 g protein per cup (120 g)\n• *0 g gula tambahan* (pemanis aspartam + asesulfam kalium)\n• *BULK* ±196 kkal — Chocolate, Peanut Butter, Banana\n• *CUT* ±127 kkal — Strawberry, Matcha, Vanilla\n• Harga Rp28.000/cup'},
@@ -472,8 +478,8 @@ function replyPuyotein(){
 function replyHampers(){
   return [{text:'Tentu, Kak! Ini pilihan *hampers PUYO* 🎁 yang cocok untuk hadiah, arisan, maupun acara kantor:'},
     {type:'hampers', ids:HAMPERS.map(h => h.id)},
-    {text:'*Cara pesan:* datang ke gerai PUYO terdekat dan sebutkan nama hampers-nya. Untuk pesanan banyak, sebaiknya pesan *1 hari sebelumnya* agar varian lengkap.\n\n_Isi hampers dapat menyesuaikan stok gerai._',
-     qr:[{l:'📍 Lokasi gerai', a:'stores'},{l:'🍮 Varian produk', a:'products'},{l:'🏷️ Promo bulan ini', a:'promo'}]}];
+    {text:'*Cara pesan:* ketuk *Tambah ke keranjang* pada hampers pilihan, lalu checkout dan pilih gerai pengambilan. Bayar dengan QRIS atau tunai di gerai.\n\n_Isi hampers dapat menyesuaikan stok gerai._',
+     btns:[{l:'Buka katalog hampers', a:'catalog:hampers', ic:'list'}], qr:[{l:'📍 Lokasi gerai', a:'stores'},{l:'🏷️ Promo bulan ini', a:'promo'}]}];
 }
 function replyHamper(id){
   const h = HAMPERS.find(x => x.id === id);
@@ -536,7 +542,7 @@ function replyStamp(){
   if (!S.member) return replyNotMember('Kartu stamp hanya untuk *PUYO Member*.');
   const v = activeMember10();
   return [{type:'card', snap:snap(), text:`Kartu stamp Kakak saat ini: *${S.stamps.length}/5 stamp* ⭐\nKartu yang sudah penuh: ${S.cardsDone.length}\nDiskon member 10% bulan ini: ${v && !v.usedAt ? 'belum dipakai ✅' : 'sudah dipakai'}`,
-    btns:[{l:'Lihat detail stamp & riwayat', a:'stamppop', ic:'list'},{l:'Simulasi beli di gerai', a:'kasir', ic:'store'}]}];
+    btns:[{l:'Lihat detail stamp & riwayat', a:'stamppop', ic:'list'},{l:'Pesan & ambil di gerai', a:'order', ic:'store'}]}];
 }
 function replyNotMember(lead){
   return [{text:`${lead} Daftarnya gratis dan cukup lewat chat ini, Kak 😊\n\nBenefit PUYO Member:\n• Diskon 10% setiap bulan\n• 5 stamp = 1 PUYO gratis\n• 1 PUYO gratis di hari ulang tahun`, btns:[{l:'Daftar sekarang', a:'reg'},{l:'Nanti saja', a:'later'}]}];
@@ -666,7 +672,7 @@ function finishReg(){
 
 /* ================= router ================= */
 function act(a, label){
-  if (label && !/^(loc|stamppop|kasir|pickdate)$/.test(a)) me(label);
+  if (label && !/^(loc|stamppop|pickdate|catalog|cart|orders|qris|pickup|cancel|addcart)/.test(a)) me(label);
   const [k, arg] = a.split(':');
   switch (k){
     case 'menu': return bot(menuMsg());
@@ -683,7 +689,14 @@ function act(a, label){
     case 'puyotein': return bot(replyPuyotein());
     case 'stamp': return bot(replyStamp());
     case 'stamppop': return openStampPopup();
-    case 'kasir': return openKasir();
+    case 'order': return bot(replyOrderStart());
+    case 'catalog': return openCatalog(arg);
+    case 'cart': return openCart();
+    case 'orders': return openOrders();
+    case 'qris': return openQris(arg);
+    case 'pickup': return pickupOrder(arg);
+    case 'cancel': return cancelOrder(arg);
+    case 'addcart': { addCart(arg); return bot({text:`*${ITEM(arg).name}* sudah masuk keranjang 🛒 (total ${cartCount()} item · ${rp(cartTotal())})`, btns:[{l:'Lihat keranjang & checkout', a:'cart', ic:'store'},{l:'Tambah menu lain', a:'catalog', ic:'list'}]}); }
     case 'bday': return bot(replyBday());
     case 'reg': return startReg();
     case 'later': return bot({text:'Baik, Kak 😊 Kakak bisa daftar kapan saja dengan mengetik *daftar*.'}, menuMsg());
@@ -702,6 +715,7 @@ function onUserText(text){
   if (num && NUM_MENU[num[1]]){
     const k = NUM_MENU[num[1]];
     if (k === 'stamp' && !S.member) return startReg();
+    if (k === 'orders') return bot(replyOrdersList());
     return act(k);
   }
   const r = detect(t), sc = r.sc;
@@ -709,9 +723,15 @@ function onUserText(text){
   if (/^ (menu|main menu|lihat menu|menu utama|help|bantuan|tolong|start|mulai chat|info) $/.test(r.n)) return bot(menuMsg());
   if (sc.stop && r.n.trim().split(' ').length <= 3){ S.optOut = true; save(); return bot({text:'Baik, Kak. Kami tidak akan mengirimkan pesan promo lagi 🙏 Kakak tetap bisa bertanya dan memakai benefit member melalui chat ini. Ketik *mulai* untuk menerima promo kembali.'}); }
   if (/^\s*mulai\s*$/.test(r.n) && S.optOut){ S.optOut = false; save(); return bot({text:'Siap, Kak! Kakak akan kembali menerima info promo (maksimal 2 pesan per bulan) 😊'}); }
-  const order = ['register','birthday','history','hampers','puyotein','promo','stamp','price','stores','nutrition','halal','delivery','hours','human','products','thanks','bye'];
+  const order = ['orders','register','birthday','history','delivery','order','hampers','puyotein','promo','stamp','price','stores','nutrition','halal','hours','human','products','thanks','bye'];
   const best = order.filter(k => sc[k] > 0).sort((a, b) => sc[b] - sc[a])[0];
   const pre = r.greet ? [{text:greetEcho(t)}] : [];
+  if (sc.orders) return bot(pre, replyOrdersList());
+  if (sc.order && !sc.delivery && best === 'order' || (sc.order && (r.prod || sc.hampers) && !sc.delivery)){
+    if (r.prod){ addCart(r.prod, 1, true); return bot(pre, {text:`Baik, Kak! *${P(r.prod).name}* sudah kami masukkan ke keranjang 🛒 (total ${cartCount()} item · ${rp(cartTotal())})`, btns:[{l:'Lihat keranjang & checkout', a:'cart', ic:'store'},{l:'Tambah menu lain', a:'catalog', ic:'list'}]}); }
+    if (sc.hampers) return bot(pre, {text:'Siap, Kak! Silakan pilih hampers di katalog, lalu checkout untuk diambil di gerai terdekat 🎁', btns:[{l:'Buka katalog hampers', a:'catalog:hampers', ic:'list'}]});
+    return bot(pre, replyOrderStart());
+  }
   // Specific product/flavor asked
   if (r.prod && (!best || best === 'products' || best === 'price' || (best === 'puyotein' && r.prod.startsWith('puyotein')))){
     if (best === 'price') return bot(pre, {text:`Harga *${P(r.prod).name}* adalah *${rp(P(r.prod).price)}* per cup 😊`}, replyProduct(r.prod));
@@ -777,9 +797,9 @@ function openDatePicker(){
 function voucherSheet(v){
   const used = !!v.usedAt, exp = !used && v.exp < Date.now();
   const ov = sheet(v.title, `<div class="codebig">${voucherHTML(v)}<canvas id="qrc" width="168" height="168"></canvas><div class="cv">${esc(v.code)}</div><div style="color:var(--mut);font-size:13px">${used ? 'Voucher ini sudah dipakai.' : exp ? 'Voucher ini sudah kedaluwarsa.' : 'Tunjukkan kode ini ke kasir PUYO.'}</div></div>`,
-    !used && !exp && S.member ? '<button class="pbtn" id="useV">Pakai di Simulasi Kasir</button>' : '');
+    !used && !exp && S.member ? '<button class="pbtn" id="useV">Pakai saat pesan (checkout)</button>' : '');
   drawCode($('#qrc', ov), v.code);
-  const u = $('#useV', ov); if (u) u.onclick = () => { ov.close(); openKasir({voucher:v.id}); };
+  const u = $('#useV', ov); if (u) u.onclick = () => { ov.close(); setTimeout(() => cartCount() ? openCart() : openCatalog(), 230); };
 }
 function drawCode(cv, code){
   const ctx = cv.getContext('2d'), N = 25, s = cv.width / N;
@@ -803,7 +823,7 @@ function openStampPopup(focusTx){
   }
   const card = `<div class="card big"><div class="mcard"><div class="mt"><div><div class="k">PUYO Member</div><div class="nm">${esc(S.member.name)}</div><div class="id">${esc(S.member.mid)} · bergabung ${dShort(S.member.joinedAt)}</div></div><img class="lg" src="img/logo.png" alt=""></div><div class="slots">${slots.join('')}</div><div class="ms">${cur.length}/5 stamp · ${5 - cur.length} lagi untuk 1 PUYO gratis · kartu ke-${S.cardsDone.length + 1}</div></div></div>`;
   const txRow = (t, label, gray) => `<div class="trx" data-txrow="${t.id}"><div class="th"><div class="tn${gray ? ' gray' : ''}">${label}</div><div class="ti"><div class="t1">PUYO ${esc(oName(t.outlet.n))}</div><div class="t2">${dLong(t.at)} · ${hhmm(t.at)} · ${esc(t.outlet.c)}</div></div><div class="ta">${rp(t.total)}</div></div><div class="td">${t.items.map(it => `${it.qty}× ${esc(it.name)} — ${rp(it.qty * it.price)}`).join('<br>')}${t.disc ? `<br><span style="color:#1c8f72">${esc(t.discLabel)}: −${rp(t.disc)}</span>` : ''}<br>${esc(t.outlet.f)}${t.outlet.f ? ' · ' : ''}${esc(t.id)}${t.outlet.u ? ` · <a href="${esc(t.outlet.u)}" target="_blank" rel="noopener">Maps ↗</a>` : ''}</div></div>`;
-  const curList = cur.length ? cur.map((t, i) => txRow(t, '⭐' + (i + 1))).join('') : '<div class="empty">Belum ada stamp di kartu ini. Setiap pembelian di gerai PUYO = 1 stamp.</div>';
+  const curList = cur.length ? cur.map((t, i) => txRow(t, '⭐' + (i + 1))).join('') : '<div class="empty">Belum ada stamp di kartu ini. Setiap pesanan yang diambil di gerai PUYO = 1 stamp.</div>';
   const older = S.txs.filter(t => !S.stamps.includes(t.id)).slice().reverse();
   const olderList = older.length ? older.map(t => txRow(t, t.stampNo ? '⭐' + t.stampNo : '–', true)).join('') : '';
   const vs = S.vouchers.slice().reverse();
@@ -811,11 +831,11 @@ function openStampPopup(focusTx){
     <div class="txl"><h4>Stamp di kartu ini (${cur.length}/5)</h4>${curList}</div>
     ${older.length ? `<div class="txl"><h4>Transaksi sebelumnya</h4>${olderList}</div>` : ''}
     <div class="txl"><h4>Voucher saya</h4>${vs.length ? `<div class="vlist">${vs.map(voucherHTML).join('')}</div>` : '<div class="empty">Belum ada voucher.</div>'}</div>`;
-  const ov = sheet('Kartu Stamp PUYO Member', body, '<button class="pbtn" id="toKasir">Simulasi beli di gerai (+1 stamp)</button>');
+  const ov = sheet('Kartu Stamp PUYO Member', body, '<button class="pbtn" id="toKasir">🛒 Pesan & ambil di gerai (+1 stamp)</button>');
   $$('.slot.on', ov).forEach(sl => { sl.classList.add('new'); sl.onclick = () => focusRow(sl.dataset.tx); });
   $$('.trx .th', ov).forEach(h => h.onclick = () => h.parentElement.classList.toggle('open'));
   $$('[data-voucher]', ov).forEach(e => e.onclick = () => voucherSheet(S.vouchers.find(v => v.id === e.dataset.voucher)));
-  $('#toKasir', ov).onclick = () => { ov.close(); openKasir(); };
+  $('#toKasir', ov).onclick = () => { ov.close(); setTimeout(() => openCatalog(), 230); };
   function focusRow(id){
     const r = $(`[data-txrow="${id}"]`, ov); if (!r) return;
     $$('.trx', ov).forEach(x => x.classList.remove('hl'));
@@ -824,98 +844,306 @@ function openStampPopup(focusTx){
   if (focusTx) setTimeout(() => focusRow(focusTx), 300);
 }
 
-/* ---------- Simulasi kasir ---------- */
-function openKasir(pre = {}){
-  if (!S.member){
-    bot(replyNotMember('Stamp dan voucher dicatat lewat nomor *PUYO Member* di kasir.'));
-    return;
+/* ---------- Pesan & ambil di gerai (pickup) ---------- */
+const ITEM = id => { const p = P(id); if (p) return p; const h = HAMPERS.find(x => x.id === id); return h ? {id:h.id, name:h.name, price:h.price, cat:'hampers', img:P(h.items[0]).img, desc:h.desc, items:h.items} : null; };
+const cartCount = () => Object.values(S.cart || {}).reduce((a, q) => a + q, 0);
+const cartItems = () => Object.entries(S.cart || {}).filter(([id, q]) => q > 0 && ITEM(id)).map(([id, q]) => { const it = ITEM(id); return {id, name:it.name, qty:q, price:it.price, cat:it.cat}; });
+const cartTotal = () => cartItems().reduce((a, i) => a + i.qty * i.price, 0);
+function setCart(id, q){ S.cart = S.cart || {}; if (q > 0) S.cart[id] = q; else delete S.cart[id]; save(); updCartBadge(); document.dispatchEvent(new Event('cartchange')); }
+function addCart(id, n = 1, silent){ setCart(id, ((S.cart || {})[id] || 0) + n); if (!silent) toast(`${ITEM(id).name} ditambahkan ke keranjang 🛒`); }
+function updCartBadge(){ const b = $('#cartBadge'); if (!b) return; const n = cartCount(); b.hidden = !n; b.textContent = n; b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
+const ST_LABEL = {unpaid:'Menunggu pembayaran', new:'Pesanan diterima', preparing:'Sedang disiapkan', ready:'Siap diambil', done:'Selesai', cancelled:'Dibatalkan'};
+const T_PREP = 4000, T_READY = 15000;
+
+function pickupSlots(){
+  const now = new Date(); const out = [];
+  let d = new Date(now.getTime() + 30 * 60000);
+  d.setMinutes(d.getMinutes() < 30 ? 30 : 60, 0, 0);
+  let day = 'Hari ini';
+  const open = 10, close = 22;
+  if (d.getHours() >= close || (d.getHours() === close - 1 && d.getMinutes() > 30) || now.getHours() >= close - 1){ d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, open, 0); day = 'Besok'; }
+  if (d.getHours() < open) d.setHours(open, 0, 0, 0);
+  while (out.length < 10 && (d.getHours() < close - 1 || (d.getHours() === close - 1 && d.getMinutes() <= 30))){
+    out.push({t:d.getTime(), l:`${day}, ${hhmm(d)}`}); d = new Date(d.getTime() + 30 * 60000);
   }
-  const K = {step:0, outlet:S.lastOutlet != null ? S.lastOutlet : null, city:S.nearCity || CITIES_BY_COUNT[0], q:'', cart:{}, ben:pre.voucher ? 'v:' + pre.voucher : 'none'};
-  if (K.outlet == null){ const o = OUTLETS.find(o => o.c === K.city); K.outlet = o ? o.i : 0; }
-  const ov = sheet('Simulasi Kasir PUYO', '<div id="kb"></div>', '<div style="display:flex;gap:8px"><button class="gbtn" id="kBack" style="margin:0;flex:1">Kembali</button><button class="pbtn" id="kNext" style="flex:2">Lanjut</button></div>');
+  return out;
+}
+const canAsap = () => { const h = new Date().getHours(); return h >= 10 && h < 21; };
+
+/* katalog (seperti katalog WhatsApp Business) */
+function openCatalog(tab){
+  let T = tab || 'silky';
+  const ov = sheet('Katalog PUYO', '<div id="catTabs" class="ctabs"></div><div id="catList"></div>', '<button class="pbtn cartbar" id="toCart"></button>', {cls:'tall', onClose:() => document.removeEventListener('cartchange', foot)});
+  const tabs = $('#catTabs', ov), list = $('#catList', ov), go = $('#toCart', ov);
+  const groups = {silky:['🍮 Silky Desserts', SILKY], protein:['💪 PUYOTEIN', PROTEIN], hampers:['🎁 Hampers', HAMPERS.map(h => ITEM(h.id))]};
+  function draw(){
+    tabs.innerHTML = Object.entries(groups).map(([k, [l]]) => `<button data-t="${k}" class="${k === T ? 'on' : ''}">${l}</button>`).join('');
+    list.innerHTML = groups[T][1].map(p => { const q = (S.cart || {})[p.id] || 0; return `<div class="crow" data-id="${p.id}"><div class="cimg${p.cat === 'hampers' ? ' hm' : ''}">${p.cat === 'hampers' ? p.items.slice(0, 4).map(i => `<img src="${P(i).img}" alt="">`).join('') : `<img src="${p.img}" alt="">`}</div><div class="cinfo"><div class="cn">${esc(p.name)}${p.tag ? ` <span class="ctag">${esc(p.tag)}</span>` : ''}</div><div class="cd">${esc(p.desc)}</div><div class="cp">${rp(p.price)}</div></div><div class="cq">${q ? `<div class="qty"><button class="minus" aria-label="Kurangi">−</button><span>${q}</span><button class="plus" aria-label="Tambah">+</button></div>` : `<button class="addb">Tambah</button>`}</div></div>`; }).join('');
+    $$('[data-t]', tabs).forEach(b => b.onclick = () => { T = b.dataset.t; draw(); list.scrollTop = 0; });
+    $$('.crow', list).forEach(r => {
+      const id = r.dataset.id;
+      const a = $('.addb', r); if (a) a.onclick = () => { addCart(id, 1, true); draw(); };
+      const pl = $('.plus', r); if (pl) pl.onclick = () => { setCart(id, (S.cart[id] || 0) + 1); draw(); };
+      const mi = $('.minus', r); if (mi) mi.onclick = () => { setCart(id, (S.cart[id] || 0) - 1); draw(); };
+    });
+    foot();
+  }
+  function foot(){ const n = cartCount(); go.disabled = !n; go.innerHTML = n ? `🛒 Lihat keranjang · ${n} item · ${rp(cartTotal())}` : 'Keranjang masih kosong'; }
+  document.addEventListener('cartchange', foot);
+  go.onclick = () => { ov.close(); setTimeout(openCart, 230); };
+  draw();
+}
+
+/* keranjang */
+function openCart(){
+  const ov = sheet('Keranjang', '<div id="cartB"></div>', '<div style="display:flex;gap:8px"><button class="gbtn" id="cAdd" style="margin:0;flex:1">+ Tambah menu</button><button class="pbtn" id="cGo" style="flex:2">Checkout</button></div>');
+  const B = $('#cartB', ov), go = $('#cGo', ov);
+  function draw(){
+    const items = cartItems();
+    if (!items.length){ B.innerHTML = '<div class="empty" style="padding:30px 6px">🛒<br>Keranjang Kakak masih kosong.</div>'; go.disabled = true; go.textContent = 'Checkout'; return; }
+    B.innerHTML = items.map(i => `<div class="crow" data-id="${i.id}"><div class="cimg sm"><img src="${ITEM(i.id).img}" alt=""></div><div class="cinfo"><div class="cn">${esc(i.name)}</div><div class="cp">${rp(i.price)}</div></div><div class="cq"><div class="qty"><button class="minus" aria-label="Kurangi">${i.qty === 1 ? '🗑' : '−'}</button><span>${i.qty}</span><button class="plus" aria-label="Tambah">+</button></div></div></div>`).join('') +
+      `<div class="sumbox"><div class="sl tot" style="border:0;margin:0;padding:0"><span>Subtotal (${cartCount()} item)</span><span>${rp(cartTotal())}</span></div><div style="font-size:12px;color:var(--mut);margin-top:4px">Diambil sendiri di gerai PUYO pilihan Kakak. Diskon member & voucher dipilih saat checkout.</div></div>`;
+    $$('.crow', B).forEach(r => { const id = r.dataset.id; $('.plus', r).onclick = () => { setCart(id, S.cart[id] + 1); draw(); }; $('.minus', r).onclick = () => { setCart(id, S.cart[id] - 1); draw(); }; });
+    go.disabled = false; go.textContent = `Checkout · ${rp(cartTotal())}`;
+  }
+  $('#cAdd', ov).onclick = () => { ov.close(); setTimeout(() => openCatalog(), 230); };
+  go.onclick = () => {
+    if (!S.member){ ov.close(); bot(replyNotMember('Untuk memesan dan mengumpulkan stamp, Kakak perlu menjadi *PUYO Member* terlebih dahulu.')); return; }
+    ov.close(); setTimeout(openCheckout, 230);
+  };
+  draw();
+}
+
+/* checkout: gerai → waktu ambil → benefit → pembayaran */
+function openCheckout(){
+  if (!cartItems().length) return toast('Keranjang masih kosong');
+  const K = {step:0, outlet:S.lastOutlet, city:S.nearCity || 'Semua', q:'', slot:canAsap() ? 'asap' : null, ben:'none', pay:null, sort:null};
+  const ov = sheet('Checkout · Ambil di gerai', '<div id="kb"></div>', '<div style="display:flex;gap:8px"><button class="gbtn" id="kBack" style="margin:0;flex:1">Kembali</button><button class="pbtn" id="kNext" style="flex:2">Lanjut</button></div>', {cls:'tall'});
   const kb = $('#kb', ov), nextB = $('#kNext', ov), backB = $('#kBack', ov);
-  const silkyQty = () => Object.entries(K.cart).filter(([id, q]) => q > 0 && P(id).cat === 'silky').reduce((a, [, q]) => a + q, 0);
+  const silkyQty = () => cartItems().filter(i => i.cat === 'silky').reduce((a, i) => a + i.qty, 0);
   const calc = () => {
-    const items = Object.entries(K.cart).filter(([, q]) => q > 0).map(([id, q]) => ({id, name:P(id).name, qty:q, price:P(id).price}));
-    const subtotal = items.reduce((a, it) => a + it.qty * it.price, 0);
-    const silkySub = items.filter(it => P(it.id).cat === 'silky').reduce((a, it) => a + it.qty * it.price, 0);
+    const items = cartItems(); const subtotal = items.reduce((a, i) => a + i.qty * i.price, 0);
+    const silkySub = items.filter(i => i.cat === 'silky').reduce((a, i) => a + i.qty * i.price, 0);
     let disc = 0, discLabel = '';
-    if (K.ben === 'm10'){ disc = Math.round(silkySub * 0.10); discLabel = 'Diskon member 10% (Silky Desserts)'; }
-    else if (K.ben.startsWith('v:') && silkyQty() > 0){ disc = 15000; const v = S.vouchers.find(x => x.id === K.ben.slice(2)); discLabel = v ? v.title : 'Voucher 1 PUYO gratis'; }
+    if (K.ben === 'm10'){ disc = Math.round(silkySub * .1); discLabel = 'Diskon member 10% (Silky Desserts)'; }
+    else if (K.ben.startsWith('v:') && silkyQty()){ disc = 15000; const v = S.vouchers.find(x => x.id === K.ben.slice(2)); discLabel = v ? v.title : 'Voucher 1 PUYO gratis'; }
     return {items, subtotal, disc, discLabel, total:Math.max(0, subtotal - disc)};
   };
+  const steps = () => `<div class="steps">${[0,1,2,3].map(i => `<span class="${i <= K.step ? 'on' : ''}"></span>`).join('')}</div>`;
+  function outletList(){
+    const q = K.q.trim().toLowerCase();
+    let list;
+    if (q){
+      const words = q.split(/\s+/).filter(Boolean);
+      list = OUTLETS.filter(o => { const t = (o.n + ' ' + o.f + ' ' + o.c).toLowerCase(); return words.every(w => t.includes(w)); });
+      const extra = OUTLETS.filter(o => !list.includes(o) && ((CITY_ALIAS[o.c] || []).some(a => a === q || (q.length >= 3 && a.startsWith(q))) || (q === 'jakarta' && JAKARTA.includes(o.c))));
+      list = list.concat(extra);
+    } else list = OUTLETS.filter(o => K.city === 'Semua' || o.c === K.city);
+    if (K.sort) list = list.slice().sort((a, b) => (K.sort[a.c] || 9e9) - (K.sort[b.c] || 9e9) || a.n.localeCompare(b.n));
+    return list;
+  }
   function draw(){
-    const steps = `<div class="steps">${[0,1,2].map(i => `<span class="${i <= K.step ? 'on' : ''}"></span>`).join('')}</div>`;
     backB.style.visibility = K.step ? 'visible' : 'hidden';
     if (K.step === 0){
-      const cs = CITIES_BY_COUNT;
-      const q = K.q.toLowerCase();
-      const list = OUTLETS.filter(o => q ? (o.n + ' ' + o.c + ' ' + o.f).toLowerCase().includes(q) : o.c === K.city).slice(0, 80);
-      kb.innerHTML = `${steps}<div style="font-weight:600;margin-bottom:8px">1. Pilih gerai tempat membeli</div><div class="srch"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667781" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="kq" placeholder="Cari mal atau kota…" value="${esc(K.q)}"></div>${q ? '' : `<div class="cities">${cs.map(c => `<button data-c="${esc(c)}" class="${c === K.city ? 'on' : ''}">${esc(c)}</button>`).join('')}</div>`}<div>${list.map(o => `<button class="oo${o.i === K.outlet ? ' on' : ''}" data-o="${o.i}"><span class="rd"></span><span><div class="on1">PUYO ${esc(oName(o.n))}</div><div class="on2">${esc(o.f)}${o.f ? ' · ' : ''}${esc(o.c)}</div></span></button>`).join('') || '<div class="empty">Gerai tidak ditemukan.</div>'}</div>`;
+      const list = outletList();
+      const cities = ['Semua', ...CITIES_BY_COUNT];
+      kb.innerHTML = `${steps()}<div class="sttl">1. Pilih gerai untuk pickup</div><div class="srch"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667781" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="kq" placeholder="Cari mal, area, atau kota (mis. BSD, Kelapa Gading)…" value="${esc(K.q)}"></div>
+        <button class="nearb" id="nearB">${IC.pin} Urutkan dari lokasi saya</button>
+        ${K.q ? '' : `<div class="cities">${cities.map(c => `<button data-c="${esc(c)}" class="${c === K.city ? 'on' : ''}">${esc(c)}</button>`).join('')}</div>`}
+        <div class="ocount">${list.length} gerai${K.q ? ` untuk "${esc(K.q)}"` : K.city === 'Semua' ? ' PUYO' : ' di ' + esc(K.city)}</div>
+        <div>${list.map(o => `<button class="oo${o.i === K.outlet ? ' on' : ''}" data-o="${o.i}"><span class="rd"></span><span style="flex:1;min-width:0"><div class="on1">PUYO ${esc(oName(o.n))}</div><div class="on2">${esc(o.f)}${o.f ? ' · ' : ''}${esc(o.c)}${K.sort && K.sort[o.c] != null ? ` · ±${Math.round(K.sort[o.c])} km` : ''}</div></span></button>`).join('') || '<div class="empty">Gerai tidak ditemukan. Coba kata lain, mis. nama mal atau kota.</div>'}</div>`;
       const qi = $('#kq', kb);
       qi.oninput = () => { K.q = qi.value; const pos = qi.selectionStart; draw(); const n = $('#kq', kb); n.focus(); n.setSelectionRange(pos, pos); };
       $$('[data-c]', kb).forEach(b => b.onclick = () => { K.city = b.dataset.c; draw(); });
-      $$('[data-o]', kb).forEach(b => b.onclick = () => { K.outlet = Number(b.dataset.o); $$('.oo', kb).forEach(x => x.classList.toggle('on', x === b)); });
-      nextB.textContent = 'Lanjut pilih produk'; nextB.disabled = false;
-    } else if (K.step === 1){
-      const o = OUTLETS[K.outlet];
-      kb.innerHTML = `${steps}<div style="font-weight:600">2. Pilih produk</div><div style="font-size:12.5px;color:var(--mut);margin:2px 0 10px">PUYO ${esc(oName(o.n))} · ${esc(o.c)}</div><div class="pgrid">${PRODUCTS.map(p => { const q = K.cart[p.id] || 0; return `<div class="pi${q ? ' has' : ''}" data-p="${p.id}"><img src="${p.img}" alt=""><div class="n">${esc(p.name)}</div><div class="p">${rp(p.price)}</div><div class="qty"><button class="minus" aria-label="Kurangi">−</button><span>${q}</span><button class="plus" aria-label="Tambah">+</button></div></div>`; }).join('')}</div>`;
-      $$('.pi', kb).forEach(el => {
-        const id = el.dataset.p;
-        $('.plus', el).onclick = () => { K.cart[id] = (K.cart[id] || 0) + 1; upd(el, id); };
-        $('.minus', el).onclick = () => { K.cart[id] = Math.max(0, (K.cart[id] || 0) - 1); upd(el, id); };
-      });
-      const upd = (el, id) => { $('span', $('.qty', el)).textContent = K.cart[id]; el.classList.toggle('has', K.cart[id] > 0); foot(); };
-      const foot = () => { const c = calc(); nextB.disabled = !c.items.length; nextB.textContent = c.items.length ? `Lanjut · ${c.items.reduce((a, i) => a + i.qty, 0)} item · ${rp(c.subtotal)}` : 'Pilih minimal 1 produk'; };
+      $$('[data-o]', kb).forEach(b => b.onclick = () => { K.outlet = Number(b.dataset.o); $$('.oo', kb).forEach(x => x.classList.toggle('on', x === b)); foot(); });
+      $('#nearB', kb).onclick = () => {
+        if (!navigator.geolocation) return toast('Perangkat tidak mendukung lokasi');
+        toast('Mencari lokasi Kakak…');
+        navigator.geolocation.getCurrentPosition(pos => {
+          const here = [pos.coords.latitude, pos.coords.longitude];
+          K.sort = Object.fromEntries(Object.entries(CITY_XY).map(([c, xy]) => [c, haversine(here, xy)]));
+          const near = Object.entries(K.sort).sort((a, b) => a[1] - b[1])[0][0];
+          K.city = 'Semua'; K.q = ''; S.nearCity = near; save();
+          if (K.outlet == null){ const o = OUTLETS.find(o => o.c === near); if (o) K.outlet = o.i; }
+          draw(); toast(`Gerai terdekat: area ${near}`);
+        }, () => toast('Izin lokasi ditolak. Silakan cari gerai secara manual.'), {timeout:12000, maximumAge:600000});
+      };
       foot();
-    } else {
-      const c0 = calc(); const o = OUTLETS[K.outlet];
-      const m10 = activeMember10(); const m10ok = m10 && !m10.usedAt && silkyQty() > 0;
-      const fv = freeVouchers();
+    } else if (K.step === 1){
+      const o = OUTLETS[K.outlet]; const slots = pickupSlots();
+      if (K.slot !== 'asap' && !slots.find(s => s.t === K.slot)) K.slot = canAsap() ? 'asap' : (slots[0] && slots[0].t);
+      kb.innerHTML = `${steps()}<div class="sttl">2. Waktu pengambilan</div><div class="osel">${IC.store}<div><b>PUYO ${esc(oName(o.n))}</b><br><span>${esc(o.f)}${o.f ? ' · ' : ''}${esc(o.c)}</span></div></div>
+        ${canAsap() ? `<button class="ben${K.slot === 'asap' ? ' on' : ''}" data-s="asap"><span class="rd"></span><span><div class="b1">Secepatnya</div><div class="b2">Siap ±15 menit setelah pesanan diterima</div></span></button>` : `<div class="hint">Gerai sudah/hampir tutup (buka 10.00–22.00). Silakan pilih jadwal pengambilan.</div>`}
+        <div class="slotg">${slots.map(s => `<button data-s="${s.t}" class="${K.slot === s.t ? 'on' : ''}">${esc(s.l)}</button>`).join('')}</div>`;
+      $$('[data-s]', kb).forEach(b => b.onclick = () => { K.slot = b.dataset.s === 'asap' ? 'asap' : Number(b.dataset.s); draw(); });
+      foot();
+    } else if (K.step === 2){
+      const m10 = activeMember10(); const m10ok = m10 && !m10.usedAt && silkyQty() > 0; const fv = freeVouchers();
       if (K.ben === 'm10' && !m10ok) K.ben = 'none';
       if (K.ben.startsWith('v:') && (!fv.find(v => v.id === K.ben.slice(2)) || !silkyQty())) K.ben = 'none';
       const c = calc();
       const ben = (k, t, d, dis) => `<button class="ben${K.ben === k ? ' on' : ''}" data-b="${k}" ${dis ? 'disabled' : ''}><span class="rd"></span><span><div class="b1">${t}</div><div class="b2">${d}</div></span></button>`;
-      kb.innerHTML = `${steps}<div style="font-weight:600">3. Pembayaran</div><div style="font-size:12.5px;color:var(--mut);margin:2px 0 6px">PUYO ${esc(oName(o.n))} · Member ${esc(S.member.name)} (${esc(S.member.mid)})</div>
-        <div class="sumbox">${c.items.map(it => `<div class="sl"><span>${it.qty}× ${esc(it.name)}</span><span>${rp(it.qty * it.price)}</span></div>`).join('')}<div class="sl" style="border-top:1px solid #e3e8ea;padding-top:6px;margin-top:6px"><span>Subtotal</span><span>${rp(c.subtotal)}</span></div>${c.disc ? `<div class="sl" style="color:#1c8f72"><span>${esc(c.discLabel)}</span><span>−${rp(c.disc)}</span></div>` : ''}<div class="sl tot"><span>Total bayar</span><span>${rp(c.total)}</span></div></div>
-        <div style="font-weight:600;margin-top:14px;font-size:13.5px">Benefit member <span style="font-weight:400;color:var(--mut)">(pilih satu, tidak bisa digabung)</span></div>
+      kb.innerHTML = `${steps()}<div class="sttl">3. Benefit member <span style="font-weight:400;color:var(--mut)">(pilih satu, tidak bisa digabung)</span></div>
         ${ben('none', 'Tanpa benefit', 'Bayar harga normal', false)}
-        ${ben('m10', 'Diskon member 10%', m10 ? (m10.usedAt ? `Sudah dipakai bulan ini (${dShort(m10.usedAt)})` : silkyQty() ? `Kuota ${BULAN[new Date().getMonth()]}: 1x · khusus Silky Desserts` : 'Hanya berlaku untuk Silky Desserts') : 'Belum aktif', !m10ok)}
-        ${fv.map(v => ben('v:' + v.id, v.title, silkyQty() ? `1 Silky Desserts gratis · ${v.code}` : 'Tambahkan minimal 1 Silky Desserts', !silkyQty())).join('')}
-        <div style="font-size:12px;color:var(--mut);margin-top:10px">Setiap transaksi di gerai mendapat 1 stamp. Pembelian lewat GoFood/GrabFood tidak mendapat stamp.</div>`;
+        ${ben('m10', 'Diskon member 10%', m10 ? (m10.usedAt ? `Kuota ${BULAN[new Date().getMonth()]} sudah dipakai (${dShort(m10.usedAt)})` : silkyQty() ? `Kuota ${BULAN[new Date().getMonth()]}: 1x · khusus Silky Desserts · hemat ${rp(Math.round(c.items.filter(i => i.cat === 'silky').reduce((a, i) => a + i.qty * i.price, 0) * .1))}` : 'Hanya untuk Silky Desserts (tidak termasuk hampers & PUYOTEIN)') : 'Belum aktif', !m10ok)}
+        ${fv.map(v => ben('v:' + v.id, v.title, silkyQty() ? `1 Silky Desserts gratis (−Rp15.000) · ${v.code}` : 'Tambahkan minimal 1 Silky Desserts', !silkyQty())).join('')}
+        <div class="sumbox">${c.items.map(it => `<div class="sl"><span>${it.qty}× ${esc(it.name)}</span><span>${rp(it.qty * it.price)}</span></div>`).join('')}<div class="sl" style="border-top:1px solid #e3e8ea;padding-top:6px;margin-top:6px"><span>Subtotal</span><span>${rp(c.subtotal)}</span></div>${c.disc ? `<div class="sl" style="color:#1c8f72"><span>${esc(c.discLabel)}</span><span>−${rp(c.disc)}</span></div>` : ''}<div class="sl tot"><span>Total</span><span>${rp(c.total)}</span></div></div>`;
       $$('.ben', kb).forEach(b => b.onclick = () => { if (b.disabled) return; K.ben = b.dataset.b; draw(); });
-      nextB.disabled = false; nextB.textContent = `Bayar ${rp(c.total)} & catat stamp`;
+      foot();
+    } else {
+      const c = calc(); const o = OUTLETS[K.outlet];
+      const pm = (k, ic, t, d) => `<button class="ben pay${K.pay === k ? ' on' : ''}" data-p="${k}"><span class="rd"></span><span class="pic">${ic}</span><span><div class="b1">${t}</div><div class="b2">${d}</div></span></button>`;
+      kb.innerHTML = `${steps()}<div class="sttl">4. Metode pembayaran</div>
+        ${pm('qris', '<b class="qris">QRIS</b>', 'QRIS', 'Bayar sekarang lewat e-wallet / m-banking, pesanan langsung diproses')}
+        ${pm('cash', '💵', 'Tunai di gerai', 'Bayar di kasir saat mengambil pesanan')}
+        <div class="sumbox"><div class="sl"><span>Ambil di</span><span style="text-align:right">PUYO ${esc(oName(o.n))}</span></div><div class="sl"><span>Waktu</span><span>${K.slot === 'asap' ? 'Secepatnya (±15 menit)' : esc(pickupSlots().find(s => s.t === K.slot)?.l || '')}</span></div><div class="sl"><span>${c.items.reduce((a, i) => a + i.qty, 0)} item</span><span>${rp(c.subtotal)}</span></div>${c.disc ? `<div class="sl" style="color:#1c8f72"><span>${esc(c.discLabel)}</span><span>−${rp(c.disc)}</span></div>` : ''}<div class="sl tot"><span>Total bayar</span><span>${rp(c.total)}</span></div></div>
+        <div class="hint">Setiap pesanan yang sudah diambil di gerai mendapat <b>1 stamp</b>.</div>`;
+      $$('[data-p]', kb).forEach(b => b.onclick = () => { K.pay = b.dataset.p; draw(); });
+      foot();
     }
   }
-  nextB.onclick = () => { if (K.step < 2){ K.step++; K.q = ''; draw(); $('.sh-b', ov).scrollTop = 0; } else { pay(); } };
+  function foot(){
+    if (K.step === 0){ nextB.disabled = K.outlet == null; nextB.textContent = K.outlet == null ? 'Pilih gerai dulu' : 'Lanjut'; }
+    else if (K.step === 1){ nextB.disabled = !K.slot; nextB.textContent = 'Lanjut'; }
+    else if (K.step === 2){ nextB.disabled = false; nextB.textContent = `Lanjut · ${rp(calc().total)}`; }
+    else { nextB.disabled = !K.pay; nextB.textContent = !K.pay ? 'Pilih metode pembayaran' : K.pay === 'qris' ? `Bayar dengan QRIS · ${rp(calc().total)}` : `Buat pesanan · ${rp(calc().total)}`; }
+  }
+  nextB.onclick = () => { if (K.step < 3){ K.step++; K.q = ''; draw(); $('.sh-b', ov).scrollTop = 0; } else placeOrder(); };
   backB.onclick = () => { if (K.step > 0){ K.step--; draw(); } };
-  function pay(){
+  function placeOrder(){
     const c = calc(); const o = OUTLETS[K.outlet];
-    const tx = {id:'TRX-' + rnd(6), at:Date.now(), outlet:{n:o.n, f:o.f, c:o.c, u:o.u}, items:c.items, subtotal:c.subtotal, disc:c.disc, discLabel:c.discLabel, total:c.total, ben:K.ben};
-    if (K.ben === 'm10'){ const v = activeMember10(); v.usedAt = tx.at; v.usedOutlet = o.n; v.usedTx = tx.id; }
-    if (K.ben.startsWith('v:')){ const v = S.vouchers.find(x => x.id === K.ben.slice(2)); if (v){ v.usedAt = tx.at; v.usedOutlet = o.n; v.usedTx = tx.id; } }
-    S.txs.push(tx); S.stamps.push(tx.id);
-    tx.stampNo = S.stamps.length; tx.cardNo = S.cardsDone.length + 1;
-    S.lastOutlet = o.i; S.nearCity = o.c;
-    let full = false, fvch = null;
-    if (S.stamps.length >= 5){ full = true; S.cardsDone.push({at:tx.at, txIds:S.stamps.slice()}); S.stamps = []; fvch = issueVoucher('free'); }
-    save();
+    const od = {id:'PY-' + rnd(5), code:String(Math.floor(1000 + Math.random() * 9000)), at:Date.now(), outlet:{i:o.i, n:o.n, f:o.f, c:o.c, u:o.u},
+      items:c.items.map(i => ({id:i.id, name:i.name, qty:i.qty, price:i.price, cat:i.cat})), subtotal:c.subtotal, disc:c.disc, discLabel:c.discLabel, total:c.total,
+      ben:K.ben, pay:K.pay, slot:K.slot, paid:false, status:K.pay === 'qris' && c.total > 0 ? 'unpaid' : 'new', confirmedAt:null, notified:{}};
+    if (od.status === 'new') od.confirmedAt = od.at;
+    if (K.pay === 'qris' && c.total === 0){ od.paid = true; }
+    if (K.ben === 'm10'){ const v = activeMember10(); v.usedAt = od.at; v.usedOutlet = o.n; v.usedOrder = od.id; }
+    if (K.ben.startsWith('v:')){ const v = S.vouchers.find(x => x.id === K.ben.slice(2)); if (v){ v.usedAt = od.at; v.usedOutlet = o.n; v.usedOrder = od.id; } }
+    S.orders = S.orders || []; S.orders.push(od);
+    S.cart = {}; S.lastOutlet = o.i; S.nearCity = o.c; save(); updCartBadge();
     ov.close();
-    toast('Pembayaran berhasil ✓');
-    const seq = [{text:`Terima kasih, Kak ${S.member.name.split(' ')[0]}! 🙏\nPembelian Kakak di *PUYO ${oName(o.n)}* sudah tercatat.`}, {type:'receipt', txid:tx.id}];
-    if (full){
-      seq.push({type:'card', snap:snap(4, 5), text:'Stamp ke-5 berhasil ditambahkan ⭐'});
-      seq.push(() => confetti());
-      seq.push({text:'Yeay! 🎉 Kartu stamp Kakak sudah *penuh*. Ini hadiah *1 PUYO gratis* untuk Kakak:'});
-      seq.push({type:'voucher', vid:fvch.id, text:'Klaim di gerai PUYO mana pun. Kartu stamp baru sudah otomatis dimulai 😊', btns:[{l:'Lihat kartu stamp', a:'stamppop', ic:'list'}]});
-    } else {
-      const n = S.stamps.length;
-      seq.push({type:'card', snap:snap(n - 1), text:`Stamp ke-${n} berhasil ditambahkan ⭐ ${5 - n} lagi untuk 1 PUYO gratis!`, btns:[{l:'Lihat detail stamp', a:'stamppop', ic:'list'}]});
-    }
-    bot(seq);
+    if (od.status === 'unpaid'){ setTimeout(() => openQris(od.id), 240); }
+    else bot({text:`Pesanan *${od.id}* sudah kami terima 🙏\nSilakan bayar *tunai di kasir* saat mengambil pesanan di *PUYO ${oName(o.n)}*.`}, {type:'order', oid:od.id});
   }
   draw();
 }
+
+/* layar pembayaran QRIS (simulasi, bukan QRIS asli) */
+function openQris(oid){
+  const od = (S.orders || []).find(x => x.id === oid); if (!od || od.status !== 'unpaid') return;
+  const exp = od.at + 10 * 60000;
+  const ov = sheet('Pembayaran QRIS', `<div class="qrisbox"><div class="qh"><b class="qris">QRIS</b><span>PUYO ${esc(oName(od.outlet.n))}</span></div><canvas id="qrc" width="200" height="200"></canvas><div class="qamt">${rp(od.total)}</div><div class="qid">${esc(od.id)} · NMID simulasi</div><div class="qcd" id="qcd"></div><div class="qwarn">SIMULASI PROTOTYPE — bukan QRIS asli. Jangan dipindai atau dibayar.</div></div>`,
+    '<button class="pbtn" id="qPaid">Saya sudah bayar</button><button class="gbtn" id="qLater">Bayar nanti</button>');
+  drawCode($('#qrc', ov), od.id + od.total);
+  const cd = $('#qcd', ov);
+  const tick = setInterval(() => { const s = Math.max(0, Math.round((exp - Date.now()) / 1000)); cd.textContent = `Bayar dalam ${pad(Math.floor(s / 60))}:${pad(s % 60)}`; if (!s){ clearInterval(tick); } }, 500);
+  const close0 = ov.close; ov.close = () => { clearInterval(tick); close0(); };
+  $('#qLater', ov).onclick = () => { ov.close(); bot({text:`Pesanan *${od.id}* menunggu pembayaran QRIS ⏳ Selesaikan dalam 10 menit, ya Kak.`}, {type:'order', oid:od.id}); };
+  $('#qPaid', ov).onclick = async () => {
+    const b = $('#qPaid', ov); b.disabled = true; b.innerHTML = '<span class="spin"></span> Memeriksa pembayaran…';
+    await sleep(1500);
+    $('.qrisbox', ov).innerHTML = `<div class="paidok"><svg width="74" height="74" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" fill="#25d366"/><path d="M15 27l7 7 15-16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="qamt">${rp(od.total)}</div><div>Pembayaran berhasil</div></div>`;
+    b.innerHTML = 'Selesai'; b.disabled = false; b.onclick = () => ov.close();
+    $('#qLater', ov).remove();
+    od.paid = true; od.paidAt = Date.now(); od.status = 'new'; od.confirmedAt = Date.now(); save();
+    refreshOrder(od.id);
+    bot({text:`Pembayaran QRIS untuk pesanan *${od.id}* berhasil ✅\nPesanan sedang kami teruskan ke *PUYO ${oName(od.outlet.n)}*.`}, {type:'order', oid:od.id});
+  };
+}
+
+/* kartu pesanan di chat (status ikut berubah real-time) */
+function orderHTML(od){
+  const flow = ['new','preparing','ready','done'];
+  const idx = od.status === 'unpaid' ? -1 : flow.indexOf(od.status);
+  const slotTxt = od.slot === 'asap' ? 'Secepatnya' : (typeof od.slot === 'number' ? `${dayKey(od.slot) === dayKey(Date.now()) ? 'Hari ini' : dShort(od.slot)}, ${hhmm(od.slot)}` : '');
+  const payTxt = od.pay === 'qris' ? (od.paid ? 'QRIS · Lunas' : 'QRIS · Belum dibayar') : (od.paid ? 'Tunai · Lunas' : 'Tunai · Bayar di kasir');
+  const act = [];
+  if (od.status === 'unpaid') act.push(`<button data-act="qris:${od.id}">Bayar QRIS sekarang</button>`);
+  if (od.status === 'ready') act.push(`<button data-act="pickup:${od.id}" class="primary">✅ Konfirmasi sudah diambil</button>`);
+  if (['unpaid','new','preparing'].includes(od.status)) act.push(`<button data-act="cancel:${od.id}" class="danger">Batalkan pesanan</button>`);
+  if (od.outlet.u && !['done','cancelled'].includes(od.status)) act.push(`<a href="${esc(od.outlet.u)}" target="_blank" rel="noopener"><button>📍 Rute ke gerai</button></a>`);
+  return `<div class="ocard" data-oid="${od.id}">
+    <div class="oh"><span>Pesanan ${esc(od.id)}</span><span class="opill s-${od.status}">${ST_LABEL[od.status]}</span></div>
+    ${od.status === 'cancelled' ? '' : `<div class="otl">${['Diterima','Disiapkan','Siap diambil','Selesai'].map((l, i) => `<div class="${i <= idx ? 'on' : ''}${i === idx && od.status !== 'done' ? ' cur' : ''}"><i></i><span>${l}</span></div>`).join('')}</div>`}
+    <div class="oo2">${IC.store}<div><b>PUYO ${esc(oName(od.outlet.n))}</b><br><span>${esc(od.outlet.f)}${od.outlet.f ? ' · ' : ''}${esc(od.outlet.c)} · ${esc(slotTxt)}</span></div></div>
+    <div class="oit">${od.items.map(i => `<div><span>${i.qty}× ${esc(i.name)}</span><span>${rp(i.qty * i.price)}</span></div>`).join('')}${od.disc ? `<div class="disc"><span>${esc(od.discLabel)}</span><span>−${rp(od.disc)}</span></div>` : ''}<div class="tot"><span>Total · ${payTxt}</span><span>${rp(od.total)}</span></div></div>
+    ${['new','preparing','ready'].includes(od.status) ? `<div class="ocode">Kode ambil <b>${od.code}</b></div>` : ''}
+    ${od.status === 'done' ? `<div class="odone">Diambil ${dShort(od.doneAt)}, ${hhmm(od.doneAt)} · ⭐ stamp ke-${od.stampNo}</div>` : ''}
+    ${act.length ? `<div class="btns oact">${act.join('')}</div>` : ''}
+  </div>`;
+}
+function refreshOrder(oid){
+  const od = (S.orders || []).find(x => x.id === oid); if (!od) return;
+  $$(`.ocard[data-oid="${oid}"]`, feed).forEach(el => { const w = document.createElement('div'); w.innerHTML = orderHTML(od); const n = w.firstElementChild; n.classList.add('flash'); el.replaceWith(n); });
+}
+function orderTick(){
+  const now = Date.now(); let ch = false;
+  (S.orders || []).forEach(od => {
+    if (od.status === 'unpaid' && now - od.at > 10 * 60000){ od.status = 'cancelled'; od.cancelReason = 'Batas waktu pembayaran QRIS habis'; releaseVoucher(od); ch = true; refreshOrder(od.id); bot({text:`Pesanan *${od.id}* dibatalkan karena pembayaran QRIS tidak diselesaikan dalam 10 menit 🙏`}); return; }
+    if (!od.confirmedAt) return;
+    if (od.status === 'new' && now - od.confirmedAt >= T_PREP){ od.status = 'preparing'; ch = true; refreshOrder(od.id); if (!od.notified.prep){ od.notified.prep = 1; bot({text:`Pesanan *${od.id}* sedang disiapkan oleh tim PUYO ${oName(od.outlet.n)} 👩‍🍳`}); } }
+    if (od.status === 'preparing' && now - od.confirmedAt >= T_READY){
+      od.status = 'ready'; ch = true; refreshOrder(od.id);
+      if (!od.notified.ready){ od.notified.ready = 1;
+        const when = typeof od.slot === 'number' ? `\nJadwal ambil Kakak: *${dayKey(od.slot) === dayKey(Date.now()) ? 'Hari ini' : dLong(od.slot)}, ${hhmm(od.slot)}*.` : '';
+        bot({text:`Pesanan *${od.id}* sudah *siap diambil* di *PUYO ${oName(od.outlet.n)}* 🎉${when}\n\nTunjukkan *kode ambil ${od.code}* ke kasir${od.pay === 'cash' && !od.paid ? ` dan bayar tunai *${rp(od.total)}*` : ''}.\n_(Pada prototype ini waktu persiapan disingkat untuk demo.)_`}, {type:'order', oid:od.id});
+      }
+    }
+  });
+  if (ch) save();
+}
+function releaseVoucher(od){
+  S.vouchers.forEach(v => { if (v.usedOrder === od.id){ v.usedAt = null; v.usedOutlet = null; v.usedOrder = null; } });
+}
+function cancelOrder(oid){
+  const od = (S.orders || []).find(x => x.id === oid); if (!od || !['unpaid','new','preparing'].includes(od.status)) return toast('Pesanan ini sudah tidak bisa dibatalkan');
+  const ov = sheet('Batalkan pesanan?', `<p style="margin:0;line-height:1.5">Pesanan <b>${esc(od.id)}</b> di PUYO ${esc(oName(od.outlet.n))} akan dibatalkan.${od.paid ? ' Pembayaran QRIS akan dikembalikan (simulasi).' : ''} Voucher/diskon yang dipakai akan dikembalikan.</p>`, '<button class="pbtn" id="cY" style="background:var(--red)">Ya, batalkan</button>');
+  $('#cY', ov).onclick = () => {
+    ov.close(); od.status = 'cancelled'; od.cancelledAt = Date.now(); releaseVoucher(od); save(); refreshOrder(od.id);
+    me('Batalkan pesanan ' + od.id);
+    bot({text:`Pesanan *${od.id}* sudah dibatalkan, Kak 🙏${od.paid ? ' Dana QRIS dikembalikan ke sumber pembayaran (simulasi).' : ''} Voucher/diskon yang dipakai sudah kembali aktif.`});
+  };
+}
+function pickupOrder(oid){
+  const od = (S.orders || []).find(x => x.id === oid); if (!od) return;
+  if (od.status !== 'ready') return toast(od.status === 'done' ? 'Pesanan ini sudah diambil' : 'Pesanan belum siap diambil');
+  me('Pesanan ' + od.id + ' sudah saya ambil ✅');
+  od.status = 'done'; od.doneAt = Date.now(); od.paid = true; od.paidAt = od.paidAt || od.doneAt;
+  const tx = {id:'TRX-' + rnd(6), orderId:od.id, at:od.doneAt, outlet:od.outlet, items:od.items, subtotal:od.subtotal, disc:od.disc, discLabel:od.discLabel, total:od.total, pay:od.pay};
+  S.txs.push(tx); S.stamps.push(tx.id);
+  tx.stampNo = od.stampNo = S.stamps.length; tx.cardNo = S.cardsDone.length + 1;
+  let full = false, fvch = null;
+  if (S.stamps.length >= 5){ full = true; S.cardsDone.push({at:tx.at, txIds:S.stamps.slice()}); S.stamps = []; fvch = issueVoucher('free'); }
+  save(); refreshOrder(od.id);
+  const seq = [{text:`Terima kasih, Kak ${S.member.name.split(' ')[0]}! 🙏 Pesanan *${od.id}* sudah diambil di *PUYO ${oName(od.outlet.n)}*. Selamat menikmati 🍮`}];
+  if (full){
+    seq.push({type:'card', snap:snap(4, 5), text:'Stamp ke-5 berhasil ditambahkan ⭐'}, () => confetti(),
+      {text:'Yeay! 🎉 Kartu stamp Kakak sudah *penuh*. Ini hadiah *1 PUYO gratis* untuk Kakak:'},
+      {type:'voucher', vid:fvch.id, text:'Bisa dipakai saat checkout pesanan berikutnya atau di kasir gerai. Kartu stamp baru otomatis dimulai 😊', btns:[{l:'Lihat kartu stamp', a:'stamppop', ic:'list'},{l:'Pesan lagi', a:'order', ic:'store'}]});
+  } else {
+    const n = S.stamps.length;
+    seq.push({type:'card', snap:snap(n - 1), text:`Stamp ke-${n} berhasil ditambahkan ⭐ ${5 - n} lagi untuk 1 PUYO gratis!`, btns:[{l:'Lihat detail stamp', a:'stamppop', ic:'list'},{l:'Pesan lagi', a:'order', ic:'store'}]});
+  }
+  bot(seq);
+}
+function openOrders(){
+  const os = (S.orders || []).slice().reverse();
+  const ov = sheet('Pesanan saya', os.length ? os.map(orderHTML).join('') : '<div class="empty" style="padding:30px 6px">Belum ada pesanan.<br>Pesan puding PUYO dan ambil di gerai terdekat 🍮</div>', '<button class="pbtn" id="oNew">🛒 Pesan sekarang</button>');
+  $('#oNew', ov).onclick = () => { ov.close(); setTimeout(() => openCatalog(), 230); };
+  ov.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b){ ov.close(); act(b.dataset.act); } });
+}
+function replyOrderStart(){
+  const n = cartCount();
+  return [{text:`Siap, Kak! 🛒 Kakak bisa *pesan dulu lewat chat ini lalu ambil sendiri* di gerai PUYO pilihan Kakak.\n\n1. Pilih menu di katalog & masukkan ke keranjang\n2. Checkout: pilih gerai pickup (semua ${OUTLETS.length} gerai bisa dicari) & waktu ambil\n3. Bayar dengan *QRIS* atau *tunai di gerai*\n4. Ambil pesanan dengan menunjukkan kode ambil → dapat *1 stamp* ⭐${n ? `\n\nDi keranjang Kakak sudah ada ${n} item (${rp(cartTotal())}).` : ''}`,
+    btns:[{l:'Buka katalog', a:'catalog', ic:'list'}].concat(n ? [{l:`Lihat keranjang (${n})`, a:'cart', ic:'store'}] : [])}];
+}
+function replyOrdersList(){
+  const act0 = (S.orders || []).filter(o => !['done','cancelled'].includes(o.status));
+  if (!(S.orders || []).length) return [{text:'Kakak belum punya pesanan 🙏 Yuk pesan puding PUYO dan ambil di gerai terdekat!', btns:[{l:'Buka katalog', a:'catalog', ic:'list'}]}];
+  if (!act0.length) return [{text:'Tidak ada pesanan yang sedang berjalan. Riwayat pesanan bisa dilihat di menu *Pesanan saya*.', btns:[{l:'Pesanan saya', a:'orders', ic:'list'},{l:'Pesan lagi', a:'catalog', ic:'store'}]}];
+  return [{text:`Kakak punya ${act0.length} pesanan yang sedang berjalan:`}, ...act0.map(o => ({type:'order', oid:o.id}))];
+}
+
 function openInfo(){
   sheet('Info kontak', `<div class="info-top"><img src="img/wa-avatar.png" alt=""><h2>PUYO Group ${VBADGE}</h2><p>Akun bisnis · Silky Desserts</p></div>
   <div class="irow">Pionir silky pudding di Indonesia sejak 2013 🍮 ${OUTLETS.length}+ gerai di Jawa & Bali.<small>Deskripsi</small></div>
@@ -924,17 +1152,18 @@ function openInfo(){
   <div class="irow">Prototype chatbot PUYO Member untuk tugas Strategic Management, Kelompok 1 Branding 7C, Universitas Prasetiya Mulya. <b>Bukan akun resmi PUYO.</b> Bot berbasis aturan, tanpa server: setiap perangkat menyimpan datanya sendiri (nama, stamp, voucher) di browser.<small>Tentang prototype</small></div>`);
 }
 function openAttach(){
-  const ov = sheet('Kirim', `<button class="lopt" data-a="loc"><div class="lic">📍</div><div><div class="lt">Lokasi</div><div class="ld">Cari gerai PUYO terdekat</div></div></button>
-  <button class="lopt" data-a="products"><div class="lic">🍮</div><div><div class="lt">Katalog</div><div class="ld">Lihat varian produk</div></div></button>
-  <button class="lopt" data-a="stamppop"><div class="lic">⭐</div><div><div class="lt">Kartu member</div><div class="ld">Stamp, voucher, riwayat</div></div></button>
-  <button class="lopt" data-a="kasir"><div class="lic">🧾</div><div><div class="lt">Simulasi kasir</div><div class="ld">Beli di gerai & dapat stamp</div></div></button>`);
-  $$('.lopt', ov).forEach(b => b.onclick = () => { ov.close(); const a = b.dataset.a; if (a === 'products') act('products', '🍮 Katalog'); else act(a); });
+  const ov = sheet('Kirim', `<button class="lopt" data-a="catalog"><div class="lic">🍮</div><div><div class="lt">Katalog</div><div class="ld">Pilih menu & masukkan ke keranjang</div></div></button>
+  <button class="lopt" data-a="cart"><div class="lic">🛒</div><div><div class="lt">Keranjang</div><div class="ld">${cartCount() ? cartCount() + ' item · ' + rp(cartTotal()) : 'Masih kosong'}</div></div></button>
+  <button class="lopt" data-a="orders"><div class="lic">🧾</div><div><div class="lt">Pesanan saya</div><div class="ld">Status & riwayat pickup</div></div></button>
+  <button class="lopt" data-a="loc"><div class="lic">📍</div><div><div class="lt">Lokasi</div><div class="ld">Cari gerai PUYO terdekat</div></div></button>
+  <button class="lopt" data-a="stamppop"><div class="lic">⭐</div><div><div class="lt">Kartu member</div><div class="ld">Stamp, voucher, riwayat</div></div></button>`);
+  $$('.lopt', ov).forEach(b => b.onclick = () => { ov.close(); setTimeout(() => act(b.dataset.a), 230); });
 }
 function openMenu(){
   if ($('.dd')) return closeDD();
   const d = document.createElement('div');
   d.className = 'dd';
-  d.innerHTML = `<button data-m="info">Info kontak</button><button data-m="stamp">Kartu stamp & voucher</button><button data-m="kasir">Simulasi kasir (beli di gerai)</button><button data-m="promo">Simulasi: kirim pesan promo bulan ini</button><hr><button data-m="reset" class="danger">Hapus chat & mulai ulang</button>`;
+  d.innerHTML = `<button data-m="info">Info kontak</button><button data-m="orders">Pesanan saya</button><button data-m="cart">Keranjang</button><button data-m="stamp">Kartu stamp & voucher</button><button data-m="promo">Simulasi: kirim pesan promo bulan ini</button><hr><button data-m="reset" class="danger">Hapus chat & mulai ulang</button>`;
   $('#chat').appendChild(d);
   setTimeout(() => document.addEventListener('click', closeDD, {once:true}), 0);
   $$('button', d).forEach(b => b.onclick = e => { e.stopPropagation(); closeDD(); menuAct(b.dataset.m); });
@@ -943,7 +1172,8 @@ function closeDD(){ const d = $('.dd'); if (d) d.remove(); }
 function menuAct(m){
   if (m === 'info') return openInfo();
   if (m === 'stamp') return openStampPopup();
-  if (m === 'kasir') return openKasir();
+  if (m === 'orders') return openOrders();
+  if (m === 'cart') return openCart();
   if (m === 'promo'){
     if (S.optOut) return toast('Member sudah membalas STOP, promo tidak dikirim');
     const mk = monthKey(); const n = S.promoSent[mk] || 0;
@@ -1010,7 +1240,9 @@ $('#emo').onclick = e => {
 };
 $('#att').onclick = openAttach;
 $('#dots').onclick = e => { e.stopPropagation(); openMenu(); };
-$('#who').onclick = openInfo; $('#hAv').onclick = openInfo;
+$('#who').onclick = openInfo;
+$('#cartBtn').onclick = () => cartCount() ? openCart() : openCatalog();
+updCartBadge(); $('#hAv').onclick = openInfo;
 $('#back').onclick = () => toast('Ini prototype satu ruang chat 🙂');
 $$('[data-toast]').forEach(b => b.addEventListener('click', () => toast(b.dataset.toast)));
 
@@ -1020,6 +1252,10 @@ feed.addEventListener('click', e => {
   if (b){ act(b.dataset.act, b.dataset.label); return; }
   const l = e.target.closest('[data-list]');
   if (l){ const m = S.msgs.find(x => x.id === l.dataset.list); if (m) openList(m); return; }
+  const ad = e.target.closest('[data-add]');
+  if (ad){ e.preventDefault(); addCart(ad.dataset.add); ad.classList.add('ok'); setTimeout(() => ad.classList.remove('ok'), 600); return; }
+  const pk = e.target.closest('[data-pick]');
+  if (pk){ e.preventDefault(); S.lastOutlet = Number(pk.dataset.pick); save(); toast(`Gerai pickup: PUYO ${oName(OUTLETS[S.lastOutlet].n)}`); if (cartCount() && S.member) openCheckout(); else openCatalog(); return; }
   const pc = e.target.closest('[data-prod]');
   if (pc){ act('prod:' + pc.dataset.prod, P(pc.dataset.prod).name); return; }
   const z = e.target.closest('[data-zoom]');
@@ -1052,6 +1288,7 @@ function realtimeCheck(){
   }
 }
 setInterval(realtimeCheck, 20000);
+setInterval(orderTick, 1500);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) realtimeCheck(); });
 
 /* sinkron antar tab di perangkat yang sama */
@@ -1068,9 +1305,10 @@ if (window.visualViewport) visualViewport.addEventListener('resize', () => { if 
 renderAll();
 if (!S.msgs.length){
   bot({wait:300},
-    {text:'Halo! 👋 Selamat datang di WhatsApp *PUYO Group* 🍮\nKami siap membantu info varian puding, harga, lokasi gerai, hampers, dan promo. Ketik *Halo* kapan saja untuk melihat menu.'},
+    {text:'Halo! 👋 Selamat datang di WhatsApp *PUYO Group* 🍮\nKami siap membantu info varian puding, harga, lokasi gerai, hampers, dan promo. Kakak juga bisa *pesan lewat chat dan ambil di gerai terdekat* 🛒 Ketik *Halo* kapan saja untuk melihat menu.'},
     {text:'Belum jadi member? Gabung *PUYO Member* gratis dan nikmati:\n• Diskon 10% setiap bulan\n• 5 stamp = 1 PUYO gratis\n• 1 PUYO gratis tepat di hari ulang tahun 🎂', btns:[{l:'Daftar sekarang', a:'reg'},{l:'Lihat menu', a:'menu', ic:'list'}]});
 } else {
+  orderTick();
   setTimeout(realtimeCheck, 1200);
 }
 updSend();

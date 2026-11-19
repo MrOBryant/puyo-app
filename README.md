@@ -13,8 +13,8 @@ Live: https://mrobryant.github.io/puyo-app/chat.html (HP & laptop; di laptop tam
 - **Daftar member di chat**: persetujuan data (UU PDP 27/2022) → nama (hanya huruf) → tanggal lahir (ketik bebas, mis. `19/11/2001` / `19 November 2001`, atau pilih kalender).
 - **Hadiah ulang tahun real-time**: tanggal lahir dicocokkan dengan tanggal hari ini di perangkat. Kalau sama, member langsung dapat voucher 1 PUYO gratis untuk diklaim di gerai terdekat (sekali per tahun; dicek ulang otomatis tiap kali chat dibuka).
 - **Diskon member 10%**: voucher otomatis tiap bulan, 1x pakai, khusus Silky Desserts, tidak bisa digabung promo lain.
-- **Stamp**: 1 transaksi di gerai = 1 stamp, 5 stamp = 1 PUYO gratis. Klik kartu stamp untuk pop-up berisi tanggal, gerai, item, dan total tiap transaksi.
+- **Stamp**: 1 pesanan yang diambil di gerai = 1 stamp, 5 stamp = 1 PUYO gratis. Klik kartu stamp untuk pop-up berisi tanggal, gerai, item, dan total tiap transaksi.
 - **Tanya bebas** (bahasa apa pun untuk sapaan: halo, hi, hola, こんにちは, 안녕하세요, dll.): varian produk bergambar, harga, lokasi gerai (bisa kirim lokasi), hampers, promo bulan berjalan, PUYOTEIN. Ketik angka 1–8 untuk menu cepat.
-- Menu ⋮ → **Simulasi kasir** untuk mencatat pembelian di gerai (stamp, diskon 10%, voucher).
+- **Pesan & ambil di gerai (pickup)**: katalog (Silky Desserts, PUYOTEIN, hampers) → keranjang → checkout: cari & pilih gerai pickup dari semua gerai di website PUYO (bisa urut dari lokasi), pilih waktu ambil, pakai diskon member/voucher, bayar **QRIS** (layar simulasi) atau **tunai di gerai** → status pesanan real-time (diterima → disiapkan → siap diambil → selesai) → saat diambil, member dapat 1 stamp.
 
 Bot berbasis aturan (bukan AI) dan tanpa server: setiap perangkat menyimpan datanya sendiri (nama, stamp, voucher) di browser, dan tab yang terbuka di perangkat yang sama ikut tersinkron. Isi hampers dan promo bulanan bersifat ilustrasi. Bukan akun resmi PUYO.
