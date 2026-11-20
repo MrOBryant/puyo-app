@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>PUYO Group</title>
+<script>
+  // Link salah ketik (mis. "chat.html." atau tanpa .html) diarahkan ke halaman yang benar.
+  (function () {
+    var p = location.pathname.toLowerCase();
+    var base = '/puyo-app/';
+    var to = p.indexOf('chat') !== -1 ? base + 'chat.html' : base;
+    location.replace(to + location.search + location.hash);
+  })();
+</script>
+<style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;height:100vh;margin:0;color:#17323c;background:#f7fafa}a{color:#2c6b7c}</style>
+</head>
+<body><p>Mengalihkan ke <a href="/puyo-app/chat.html">chatbot PUYO</a>…</p></body>
+</html>
