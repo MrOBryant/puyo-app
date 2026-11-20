@@ -504,3 +504,12 @@ a.prow:hover,button.prow:hover{background:#fafbfb}
 .pfoot{color:var(--mut2);font-size:12px;text-align:center;padding:6px 26px;line-height:1.5}
 
 @media (max-width:520px){.pacts{flex-wrap:nowrap;gap:8px}.pacts button,.pacts a{width:auto;flex:1;min-width:0;max-width:92px;font-size:12.5px}}
+
+/* tombol kirim: mic saat kosong, pesawat kertas saat ada teks (seperti WhatsApp) */
+#send{position:relative;overflow:hidden}
+#send svg{position:absolute;left:50%;top:50%;margin:-12px 0 0 -12px;transition:transform .22s cubic-bezier(.3,1.4,.5,1),opacity .18s}
+#send svg.ic-on{opacity:1;transform:none}
+#send svg.ic-off{opacity:0;transform:scale(.3) rotate(-45deg);pointer-events:none}
+#icSend{margin-left:-10px!important}
+.field{padding-right:10px}
+@media (min-width:900px){.field{padding-right:12px}}
