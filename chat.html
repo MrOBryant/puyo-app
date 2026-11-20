@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="img/wa-avatar.png">
 <link rel="icon" type="image/png" href="img/wa-avatar.png">
 <title>PUYO Group</title>
-<link rel="stylesheet" href="chat.css?v=8">
+<link rel="stylesheet" href="chat.css?v=9">
 </head>
 <body>
 <div id="shell">
@@ -61,18 +61,16 @@
       <div class="field">
         <button id="emo" aria-label="Emoji"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.3"/><path d="M8.3 14.2c.9 1.4 2.2 2.1 3.7 2.1s2.8-.7 3.7-2.1"/><circle cx="9" cy="9.8" r=".9" fill="currentColor"/><circle cx="15" cy="9.8" r=".9" fill="currentColor"/></svg></button>
         <textarea id="inp" rows="1" placeholder="Ketik pesan" enterkeyhint="send" autocapitalize="sentences" aria-label="Ketik pesan"></textarea>
-        <button id="att" aria-label="Lampirkan"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M20 11.5l-7.8 7.8a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.4 8.4a1.7 1.7 0 0 1-2.4-2.4l7.7-7.7"/></svg></button>
-        <button id="cam" aria-label="Kamera" data-toast="Kamera tidak tersedia di prototype"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.8l1.5-2h6.4l1.5 2h1.8A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.8" r="3.8"/></svg></button>
       </div>
       <button id="send" aria-label="Kirim">
-        <svg id="icMic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 0 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.75 7.46V22h1.5v-2.54A7.5 7.5 0 0 0 19.5 12z"/></svg>
-        <svg id="icSend" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.99.99 0 0 0-1.38.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.02 4.61c0 .71.73 1.2 1.38.91z"/></svg>
+        <svg id="icMic" class="ic-on" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.5a3.5 3.5 0 0 0 3.5-3.5V6a3.5 3.5 0 0 0-7 0v6a3.5 3.5 0 0 0 3.5 3.5zm6-3.5a6 6 0 0 1-12 0H4.5a7.5 7.5 0 0 0 6.75 7.46V22h1.5v-2.54A7.5 7.5 0 0 0 19.5 12z"/></svg>
+        <svg id="icSend" class="ic-off" viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.99.99 0 0 0-1.38.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.02 4.61c0 .71.73 1.2 1.38.91z"/></svg>
       </button>
     </footer>
   </div>
 </div>
 <canvas id="confetti"></canvas>
 <script src="outlets.js?v=5"></script>
-<script src="chat.js?v=8"></script>
+<script src="chat.js?v=9"></script>
 </body>
 </html>

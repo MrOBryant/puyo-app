@@ -1270,7 +1270,14 @@ function confetti(){
 
 /* ================= composer ================= */
 function autosize(){ inp.style.height = 'auto'; inp.style.height = Math.min(120, inp.scrollHeight) + 'px'; }
-function updSend(){ const has = inp.value.trim().length > 0; $('#icMic').hidden = has; $('#icSend').hidden = !has; sendBtn.classList.toggle('has', has); }
+function updSend(){
+  const has = inp.value.trim().length > 0;
+  if (sendBtn.classList.contains('has') === has) return;
+  sendBtn.classList.toggle('has', has);
+  $('#icMic').setAttribute('class', has ? 'ic-off' : 'ic-on');
+  $('#icSend').setAttribute('class', has ? 'ic-on' : 'ic-off');
+  sendBtn.setAttribute('aria-label', has ? 'Kirim' : 'Pesan suara');
+}
 inp.addEventListener('input', () => { autosize(); updSend(); });
 inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); doSend(); } });
 sendBtn.addEventListener('click', () => { if (inp.value.trim()) doSend(); else toast('Pesan suara tidak tersedia di prototype'); });
@@ -1291,7 +1298,6 @@ $('#emo').onclick = e => {
   $$('button', d).forEach(b => b.onclick = ev => { ev.stopPropagation(); const s = inp.selectionStart ?? inp.value.length; inp.value = inp.value.slice(0, s) + b.textContent + inp.value.slice(inp.selectionEnd ?? s); inp.focus(); autosize(); updSend(); });
   setTimeout(() => document.addEventListener('click', ev => { if (!ev.target.closest('.emojis')) closeEmoji(); }, {once:true}), 0);
 };
-$('#att').onclick = openAttach;
 $('#dots').onclick = e => { e.stopPropagation(); openMenu(); };
 $('#who').onclick = openInfo;
 $('#cartBtn').onclick = () => cartCount() ? openCart() : openCatalog();
